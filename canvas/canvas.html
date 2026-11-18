@@ -34,11 +34,11 @@ html,body{margin:0;padding:0;overflow:hidden;
 #themeWash{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0}
 
 #chap{position:absolute;z-index:6}
-#chap .num{font-weight:700;color:#C4471F;letter-spacing:-.02em;line-height:1}
+#chap .num{font-weight:700;color:currentColor;letter-spacing:-.02em;line-height:1;opacity:.55}
 #chap .cn{font-weight:600;letter-spacing:.08em;line-height:1.3}
 #chap .en{font-weight:500;letter-spacing:.22em;line-height:1.3;opacity:.6}
 #stage.dark #chap .cn,#stage.red #chap .cn{color:#F2EFE6}
-#stage.dark #chap .num,#stage.red #chap .num{color:#C99B3F}
+#stage.dark #chap .num,#stage.red #chap .num{color:currentColor}
 
 #tc{position:absolute;z-index:6;text-align:right}
 #tc .lbl{font-weight:500;letter-spacing:.24em;opacity:.55}
@@ -49,9 +49,9 @@ html,body{margin:0;padding:0;overflow:hidden;
 .scene{position:absolute;inset:0;opacity:0;will-change:opacity}
 
 #prog{position:absolute;z-index:6;background:rgba(140,133,120,.22)}
-#prog .fill{height:100%;background:#C4471F;width:0}
+#prog .fill{height:100%;background:currentColor;opacity:.28;width:0}
 #stage.dark #prog,#stage.red #prog{background:rgba(242,239,230,.2)}
-#stage.red #prog .fill{background:#C99B3F}
+#stage.red #prog .fill{background:currentColor}
 
 #cap{position:absolute;left:0;right:0;z-index:7;display:flex;justify-content:center}
 #caprow{color:#1A1C1F;text-align:center;letter-spacing:.01em}

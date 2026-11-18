@@ -196,7 +196,7 @@ BUILDER.points = ({ sc, L, data, hit, fg, sub, fs }) => {
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
       gap:${gapY}px;opacity:0">
       <div style="width:${Math.round(L.font('h1')*0.92)}px;height:${Math.round(L.font('h1')*0.92)}px;
-        border-radius:50%;background:${C.warm};color:#fff;display:flex;
+        border-radius:50%;background:transparent;border:2px solid ${fg};color:${fg};display:flex;
         align-items:center;justify-content:center;${fs('h2',700)};flex:none;
         margin-bottom:${Math.round(L.pad('gap')*0.30)}px">${i+1}</div>
       <div style="width:100%;color:${fg};font-family:${FF_SERIF};font-size:${Math.round(L.font('h2')*1.05)}px;font-weight:600;line-height:1.35;text-align:left">${it.title || it}</div>
@@ -243,7 +243,7 @@ BUILDER.steps = ({ sc, L, data, hit, fg, sub, fs }) => {
       display:flex;${land?'flex-direction:column':'flex-direction:row'};
       align-items:center;justify-content:center;gap:${gap}px;opacity:0">
       <div style="width:${Math.round(L.font('h1')*0.95)}px;height:${Math.round(L.font('h1')*0.95)}px;
-        border-radius:${Math.round(L.font('h1')*0.2)}px;background:${C.gold};color:#fff;
+        border-radius:${Math.round(L.font('h1')*0.2)}px;background:transparent;border:2px solid ${fg};color:${fg};
         display:flex;align-items:center;justify-content:center;${fs('h2',700)};flex:none">${i+1}</div>
       <div style="color:${fg};font-family:${FF_SERIF};font-size:${Math.round(L.font('h2')*1.05)}px;font-weight:600;line-height:1.3;text-align:left">${it.title||it}</div>
     </div>`;
@@ -360,7 +360,7 @@ BUILDER.number = ({ sc, L, data, hit, fg, sub, fs }) => {
       width:${col.w}px;color:${sub};font:500 ${subSize}px/1.4 ${FF};
       text-align:left;opacity:0">${sublabel}</div>` : ''}
     <div id="nline" style="position:absolute;left:${col.x}px;top:${ruleTop}px;
-      width:0;height:${RULE_H}px;background:${C.warm};opacity:0"></div>`;
+      width:0;height:${RULE_H}px;background:${fg};opacity:0"></div>`;
 
   const b = sc.querySelector('#nb'), l = sc.querySelector('#nl'), s = sc.querySelector('#ns');
   return (time) => {
@@ -426,14 +426,14 @@ BUILDER.quote = ({ sc, L, data, hit, fg, sub, fs }) => {
   sc.innerHTML = `
     <div id="qm" style="position:absolute;left:${G.x(0)}px;top:${markTop}px;
       width:${G.col(0, 1).w}px;
-      color:${C.gold};font:600 ${markSize}px/0.8 ${FF_SERIF};
+      color:${fg};font:600 ${markSize}px/0.8 ${FF_SERIF};
       opacity:.10;transform-origin:left top">“</div>
     <div id="qt" style="position:absolute;left:${quoteCol.x}px;top:${bodyTop}px;
       width:${quoteCol.w}px;
       color:${fg};font:600 ${bodySize}px/1.55 ${FF_SERIF};
       letter-spacing:-.01em;text-align:left;opacity:0">${text}</div>
     <div id="qline" style="position:absolute;left:${quoteCol.x}px;top:${ruleY}px;
-      width:0;height:${RULE_H}px;background:${C.gold};opacity:0"></div>
+      width:0;height:${RULE_H}px;background:${fg};opacity:0"></div>
     ${who ? `<div id="qw" style="position:absolute;left:${whoCol.x}px;
       top:${L.snap4(ruleY + GAP * 0.8)}px;width:${whoCol.w}px;
       color:${sub};${fs('label', 500, 1.3)};letter-spacing:.06em;
@@ -570,8 +570,8 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
       <div id="pn" style="color:${fg};font:600 ${nameSize}px/1.10 ${FF_SERIF};letter-spacing:-.01em;text-align:left;
         opacity:0">${name}</div>
       <div id="pline" style="width:0;height:${Math.max(3, Math.round(L.H/640))}px;
-        background:${C.warm};opacity:0"></div>
-      ${tagline ? `<div id="pt" style="color:${C.warm};${fs('h2',600,1.35)};
+        background:${fg};opacity:0"></div>
+      ${tagline ? `<div id="pt" style="color:${sub};${fs('h2',600,1.35)};
         text-align:left;opacity:0">${tagline}</div>` : ''}
     </div>
     <div style="position:absolute;left:${hs.side.x}px;top:${hs.side.y}px;
@@ -611,7 +611,7 @@ BUILDER.cta = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
       top:${L.px(22,'h')}px;text-align:left">
       <div id="cm" style="color:${fg};font:600 ${mainSize}px/1.30 ${FF_SERIF};letter-spacing:-.01em;opacity:0">${main}</div>
       <div id="cline" style="display:inline-block;width:0;
-        height:${Math.max(3, Math.round(L.H/640))}px;background:${C.warm};opacity:0;
+        height:${Math.max(3, Math.round(L.H/640))}px;background:${fg};opacity:0;
         margin-top:${Math.round(L.pad('gap')*0.6)}px"></div>
       ${subline ? `<div id="cs" style="margin-top:${L.pad('gap')}px;color:${sub};
         ${fs('h2',500,1.4)};opacity:0">${subline}</div>` : ''}
