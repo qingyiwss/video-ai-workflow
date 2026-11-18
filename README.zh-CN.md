@@ -6,7 +6,7 @@
 
 竖屏 9:16、横屏 16:9、4:3、1:1 —— 一套代码全支持。
 
-![sync demo](demo/sync-demo.gif)
+![sync demo](docs/images/sync-demo.gif)
 
 *上面这段 2 秒：念到「卡字」两个字的那一帧，大字正好落定。这就是「卡字」。*
 
@@ -95,7 +95,7 @@ python make_demo.py
 
 ### 3. 竖屏横屏：字号按对角线等比
 
-![ratio compare](demo/ratio-compare.png)
+![ratio compare](docs/images/ratio-compare.png)
 
 *同一份 `scene-def.json`，同一时刻。左 9:16 上下排，右 16:9 左右排 —— 不是缩放，是重排。*
 

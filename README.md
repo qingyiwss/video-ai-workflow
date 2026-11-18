@@ -6,7 +6,7 @@
 
 Portrait 9:16, landscape 16:9, 4:3, 1:1 — one codebase, all four.
 
-![sync demo](demo/sync-demo.gif)
+![sync demo](docs/images/sync-demo.gif)
 
 *2 seconds from the output. The frame where the word「卡字」(kayzi) is spoken is the exact frame its title lands. That's the whole idea.*
 
@@ -97,7 +97,7 @@ net_cps ≈ 5.0 (Chinese narration, measured)
 
 ### 3. Portrait vs landscape: font size scales by diagonal
 
-![ratio compare](demo/ratio-compare.png)
+![ratio compare](docs/images/ratio-compare.png)
 
 *Same `scene-def.json`, same instant. Left 9:16 stacks vertically, right 16:9 splits
 left/right — not a rescale, a re-layout.*

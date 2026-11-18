@@ -67,3 +67,8 @@ demo/render.cjs
 _m.txt
 _commitmsg.txt
 _*.backup.md
+
+# 展示素材（不能删，README 引用）
+!docs/images/
+!docs/images/*.png
+!docs/images/*.gif
