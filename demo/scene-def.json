@@ -1,0 +1,62 @@
+[
+ {
+  "sid": "01",
+  "kind": "hero",
+  "theme": "paper",
+  "first": "01_01",
+  "last": "01_02",
+  "data": {
+   "title": "卡字",
+   "kicker": "先说个词",
+   "note": "画面动的那一下，正好跟字对上"
+  },
+  "chap": {
+   "num": "01",
+   "cn": "开场",
+   "en": "WHAT"
+  }
+ },
+ {
+  "sid": "02",
+  "kind": "compare",
+  "theme": "dark",
+  "first": "02_03",
+  "last": "02_04",
+  "data": {
+   "title": "为什么是 45 毫秒",
+   "left": {
+    "title": "看见",
+    "desc": "125 ms",
+    "color": "#7A8971"
+   },
+   "right": {
+    "title": "听见",
+    "desc": "45 ms",
+    "color": "#C99B3F"
+   }
+  },
+  "chap": {
+   "num": "02",
+   "cn": "原理",
+   "en": "WHY"
+  }
+ },
+ {
+  "sid": "03",
+  "kind": "number",
+  "theme": "paper",
+  "first": "03_05",
+  "last": "03_06",
+  "data": {
+   "value": "100",
+   "unit": "%",
+   "label": "卡字率",
+   "sublabel": "15 个关键词全卡上"
+  },
+  "chap": {
+   "num": "03",
+   "cn": "结果",
+   "en": "RESULT"
+  }
+ }
+]

@@ -1,0 +1,10 @@
+# 核心依赖
+numpy>=2.0
+soundfile>=0.14.0
+faster-whisper>=1.2.1
+
+# TTS 兜底方案（免费，无需显卡）
+edge-tts>=7.3.1
+
+# 本地 TTS（可选，需要 audiocpp 引擎）
+# audiocpp 不是 pip 包，从 GitHub Releases 下载

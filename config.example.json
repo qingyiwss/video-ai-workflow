@@ -1,0 +1,47 @@
+{
+  "_说明": "路径配置。留空 = 自动探测。改这里比改代码安全。",
+  "_优先级": "环境变量 KAZI_* > 这个文件 > 自动探测",
+
+  "tts": {
+    "backend": "auto",
+    "_backend说明": "auto / local-gpu / local-cpu / edge-tts / cloud-api",
+    "exe": "",
+    "model": "",
+    "ref": "",
+    "ref_text": "",
+    "edge_voice": "zh-CN-YunxiNeural",
+    "edge_rate": "+0%"
+  },
+
+  "asr": {
+    "model": "",
+    "_说明": "留空用 small（自动下载 300MB）。本地有 medium 就填路径"
+  },
+
+  "ffmpeg": {
+    "ffmpeg": "",
+    "ffprobe": "",
+    "_说明": "留空从 PATH 找，再找 vendor/ffmpeg/bin"
+  },
+
+  "chrome": {
+    "path": "",
+    "_说明": "留空自动找 Chrome/Edge。找不到就填完整路径"
+  },
+
+  "node": {
+    "puppeteer": "",
+    "_说明": "留空用项目内的 node_modules/puppeteer-core"
+  },
+
+  "audio": {
+    "sfx": "",
+    "bgm": "",
+    "_说明": "sfx 填 Kenney interface-sounds/Audio 目录。bgm 填你的配乐目录"
+  },
+
+  "render": {
+    "concurrency": 1,
+    "_说明": "并发渲染数。1 最稳，2-3 更快但吃内存"
+  }
+}

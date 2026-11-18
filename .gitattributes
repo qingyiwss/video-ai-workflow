@@ -1,0 +1,44 @@
+# 换行符统一（关键，否则 Linux/macOS 用户拿到的 .py 会带 CRLF）
+* text=auto eol=lf
+
+# Windows 脚本保留 CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件（不要当文本处理）
+*.ogg  binary
+*.wav  binary
+*.mp3  binary
+*.mp4  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.gguf binary
+*.pth  binary
+*.safetensors binary
+*.zip  binary
+*.7z   binary
+
+# Markdown 和配置强制 LF（GitHub 上显示更稳）
+*.md   text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+
+# Python / JS 强制 LF
+*.py   text eol=lf
+*.js   text eol=lf
+*.cjs  text eol=lf
+*.mjs  text eol=lf
+*.ts   text eol=lf
+*.html text eol=lf
+*.css  text eol=lf
+*.sh   text eol=lf
+
+# Git 统计时把示例片当二进制，不污染 diff
+demo/*.mp4 binary
+demo/*.wav binary

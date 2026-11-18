@@ -1,0 +1,64 @@
+# ── 模型（太大，用户自己下）──
+models/
+*.gguf
+*.pth
+*.safetensors
+
+# ── TTS 引擎（用户自己下）──
+vendor/
+
+# ── 渲染产物 ──
+frames/
+frames-*/
+batch/
+*.mp4
+!demo/FINAL.mp4
+
+# ── 音频中间产物 ──
+out/
+mix.wav
+mix-final.wav
+_bgm_flat.wav
+_norm_*.wav
+*.tmp.wav
+
+# ── 声音参考（个人隐私）──
+my-voice/
+!my-voice/.gitkeep
+*.wav
+!demo/narration.wav
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# ── Node ──
+node_modules/
+
+# ── 用户配置（含绝对路径，不该提交）──
+config.json
+!config.example.json
+
+# ── 编辑器 / 系统 ──
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ── 日志 / 临时 ──
+*.log
+_setup-test/
+demo/lines/
+demo/selection.json
+demo/selection-meta.json
+demo/timeline_draft.json
+demo/report.txt
+demo/anim.js
+demo/time.js
+demo/layout.js
+demo/scenes.js
+demo/canvas.html
+demo/render.cjs

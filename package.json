@@ -1,0 +1,16 @@
+{
+  "name": "video-ai-workflow",
+  "version": "0.1.0",
+  "description": "AI 讲解视频生产工作流 —— 竖屏横屏自适应，卡字率 100%",
+  "private": true,
+  "scripts": {
+    "render": "node canvas/render.cjs",
+    "postinstall": "echo 'puppeteer-core installed. Chrome is auto-detected.'"
+  },
+  "dependencies": {
+    "puppeteer-core": "^24.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
