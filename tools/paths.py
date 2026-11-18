@@ -128,10 +128,26 @@ def _find_puppeteer():
     if cfg and Path(cfg).exists():
         return str(Path(cfg).resolve())
 
+    # 项目内
     for sub in [ROOT, ROOT/"node_modules", ROOT.parent, Path.cwd()]:
         p = sub/"node_modules"/"puppeteer-core"
         if p.exists():
             return str(p).replace("\\", "/")
+
+    # npm 全局根目录（npm root -g）
+    w = shutil.which("node")
+    npm = shutil.which("npm")
+    if npm:
+        try:
+            import subprocess
+            r = subprocess.run([npm, "root", "-g"], capture_output=True,
+                               text=True, timeout=15)
+            if r.returncode == 0 and r.stdout.strip():
+                p = Path(r.stdout.strip())/"puppeteer-core"
+                if p.exists():
+                    return str(p).replace("\\", "/")
+        except Exception:
+            pass
     # 全局
     w = shutil.which("node")
     if w:

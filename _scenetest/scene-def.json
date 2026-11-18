@@ -1,0 +1,45 @@
+[
+ {"sid":"01","kind":"hero","theme":"paper","first":"01_01","last":"01_03",
+  "data":{"title":"大标题","kicker":"场景01","note":"这一段用来看排版是不是左对齐"},
+  "chap":{"num":"01","cn":"hero","en":"HERO"}},
+
+ {"sid":"02","kind":"points","theme":"paper","first":"02_04","last":"02_06",
+  "data":{"items":[{"title":"要点一","desc":"第一项"},{"title":"要点二","desc":"第二项"},{"title":"要点三","desc":"关键词"}]},
+  "chap":{"num":"02","cn":"points","en":"POINTS"}},
+
+ {"sid":"03","kind":"steps","theme":"dark","first":"03_07","last":"03_09",
+  "data":{"items":[{"title":"第一步"},{"title":"第二步"},{"title":"第三步"},{"title":"第四步"}]},
+  "chap":{"num":"03","cn":"steps","en":"STEPS"}},
+
+ {"sid":"04","kind":"compare","theme":"paper","first":"04_10","last":"04_12",
+  "data":{"title":"两种做法",
+          "left":{"title":"旧方案","desc":"之前的样子","color":"#8C8578"},
+          "right":{"title":"新方案","desc":"现在的样子","color":"#C4471F"}},
+  "chap":{"num":"04","cn":"compare","en":"COMPARE"}},
+
+ {"sid":"05","kind":"number","theme":"dark","first":"05_13","last":"05_15",
+  "data":{"value":"100","unit":"%","label":"目标值","sublabel":"实测达成"},
+  "chap":{"num":"05","cn":"number","en":"NUMBER"}},
+
+ {"sid":"06","kind":"quote","theme":"paper","first":"06_16","last":"06_18",
+  "data":{"text":"这句话很重要，值得单独放一屏","who":"某人"},
+  "chap":{"num":"06","cn":"quote","en":"QUOTE"}},
+
+ {"sid":"07","kind":"before-after","theme":"dark","first":"07_19","last":"07_21",
+  "data":{"label1":"改前","label2":"改后",
+          "before":{"title":"旧样子","desc":"看不出重点"},
+          "after":{"title":"新样子","desc":"一眼懂"}},
+  "chap":{"num":"07","cn":"before-after","en":"BEFORE AFTER"}},
+
+ {"sid":"08","kind":"list","theme":"paper","first":"08_22","last":"08_24",
+  "data":{"items":[{"title":"第一条"},{"title":"第二条"},{"title":"第三条"},{"title":"第四条"}]},
+  "chap":{"num":"08","cn":"list","en":"LIST"}},
+
+ {"sid":"09","kind":"product","theme":"dark","first":"09_25","last":"09_27",
+  "data":{"name":"产品名","tagline":"一句话说明","features":["特性一","特性二","特性三"]},
+  "chap":{"num":"09","cn":"product","en":"PRODUCT"}},
+
+ {"sid":"10","kind":"cta","theme":"paper","first":"10_28","last":"10_30",
+  "data":{"main":"收藏下来","subline":"下次再看","action":"点这里"},
+  "chap":{"num":"10","cn":"cta","en":"CTA"}}
+]
