@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Read the pitfalls first
+    url: https://github.com/qingyiwss/video-ai-workflow/blob/main/docs/PITFALLS.md
+    about: 36 pitfalls, each with symptom → cause → fix. Most problems are already documented here.
+  - name: 🚀 Getting started
+    url: https://github.com/qingyiwss/video-ai-workflow/blob/main/docs/GETTING-STARTED.md
+    about: Environment setup, script format, and the full 9-step walkthrough.
+  - name: 💬 Ask a question / show your work
+    url: https://github.com/qingyiwss/video-ai-workflow/discussions
+    about: For "how do I write a script" or "here's what I made" — not for bug reports.

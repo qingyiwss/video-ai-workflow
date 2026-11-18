@@ -1,241 +1,261 @@
 # video-ai-workflow
 
-**一条命令，把一份稿子变成可以发布的视频。**
+**English** | [中文](README.zh-CN.md)
 
-竖屏 9:16、横屏 16:9、4:3、1:1 —— 一套代码全支持。
+**Turn a script into a publish-ready video with one command.**
+
+Portrait 9:16, landscape 16:9, 4:3, 1:1 — one codebase, all four.
+
+![sync demo](demo/sync-demo.gif)
+
+*2 seconds from the output. The frame where the word「卡字」(kayzi) is spoken is the exact frame its title lands. That's the whole idea.*
 
 ---
 
-## 它能做什么
+## What it does
 
 ```
-稿子  →  配音  →  逐字对齐  →  画面  →  混音  →  成片
+script  →  voice  →  word-level alignment  →  visuals  →  mix  →  final video
 ```
 
-产出效果（实测）：
+Measured output:
 
-| 指标 | 数值 |
+| Metric | Value |
 |---|---|
-| **卡字率**（画面动作和关键词的同步率） | **15/15 = 100%** |
-| 响度 | -16.1 LUFS |
-| 真峰值 | -4.2 dBTP |
-| 分辨率 | 1080×1920 / 1920×1080 / 1440×1080 / 1080×1080 |
-| 帧率 | 60fps |
+| **Kayzi rate** (visual action synced to keyword) | **15/15 = 100%** |
+| Loudness | -14 LUFS |
+| True peak | ≤ -1 dBTP |
+| Resolutions | 1080×1920 / 1920×1080 / 1440×1080 / 1080×1080 |
+| Frame rate | 60fps |
 
-「卡字」是什么：**念到哪个关键词，画面就在那一帧完成对应动作，一秒不差。**
+**What "kayzi" means**: when the voice reaches a keyword, the picture completes its
+corresponding action on that exact frame. Not before, not after.
 
 ---
 
-## 3 分钟跑起来
+## Try it in 3 minutes
 
 ```bash
-# 1. 克隆
-git clone <repo> && cd <repo>
-
-# 2. 装依赖（自动检测你的硬件，推荐合适的 TTS 方案）
-python setup.py
-
-# 3. 做个示例视频
-python make_demo.py
+git clone https://github.com/qingyiwss/video-ai-workflow
+cd video-ai-workflow
+python setup.py            # detects your hardware, recommends a TTS tier
+python make_demo.py        # generates a 15-second sample
 ```
 
-**第 3 步会生成一条 15 秒的示例片子。** 看 `demo/FINAL.mp4`。
+The third step produces `demo/FINAL.mp4`. Watch it.
 
 ---
 
-## 硬件要求：分四档
+## Hardware: four tiers, all supported
 
-**不是所有人都需要显卡。** `python setup.py` 会自动选：
+**You don't need a GPU.** `setup.py` picks automatically:
 
-| 方案 | 一句耗时 | 一条 90 秒片子 | 能克隆你的声音 |
-|---|---|---|---|
-| **本地 GPU** | 3.9 秒 | 10 分钟 | ✅ |
-| 本地 CPU（8核+） | 187.8 秒 | 2-8 小时 | ✅ |
-| 在线 API（要 Key） | ~3 秒 | 8 分钟 | ⚠️ 部分 |
-| **edge-tts**（免费兜底） | **1.7 秒** | **4 分钟** | ❌ 用微软通用音色 |
+| Tier | Per line | 90 s video | Voice cloning | Needs |
+|---|---|---|---|---|
+| **Local GPU** | 3.9 s | 10 min | yes | discrete GPU, 6 GB+ VRAM |
+| Local CPU | 188 s | 2-8 h | yes | 8 cores, 16 GB |
+| Cloud API | ~3 s | 8 min | partial | API key |
+| **edge-tts** (free) | **1.7 s** | **4 min** | no | network only |
 
-**没有显卡也能出片。** edge-tts 方案下，卡字率、画面、节奏、字幕和 GPU 方案**完全一致**，区别只有「声音是不是你自己的」。
+**No GPU still produces a publishable video.** With edge-tts, sync rate, layout,
+pacing and captions are **identical** to the GPU tier — the only difference is
+that the voice is a generic Microsoft one instead of your own.
 
-实测：CosyVoice3 净 cps **5.01**，edge-tts 净 cps **5.06** —— 差 1%，稿子的时长公式通用。
+Measured net chars-per-second: CosyVoice3 **5.01** vs edge-tts **5.06** — within 1 %.
+The script length formula works for both.
 
-详见 [docs/TTS-PLANS.md](docs/TTS-PLANS.md)。
-
----
-
-## 它凭什么
-
-**这不是「套模板」。核心是一套可验证的动画时序方法：**
-
-### 1. 卡字：三个数字定生死
-
-```
-关键词时刻 T：
-  · 画面动作必须在 T - 50ms 完成（不是 T）
-  · 新元素最晚 T - 200ms 出现
-  · 关键词前 1.35 秒必须「安静」——比前一秒多动 0.1% 就够，但不能一直动
-```
-
-依据 ITU-R BT.1359：**声音比画面早 45ms 人就能察觉，画面比声音早 125ms 才看得出来。**
-
-### 2. 字数决定片长，不是凭感觉
-
-```
-片长 = 字数 ÷ 净cps + 停顿合计 + 片头尾
-
-净 cps 实测 5.0（中文口播）
-60 秒 → 229 字
-90 秒 → 372 字
-```
-
-### 3. 竖屏横屏：字号按对角线等比
-
-```
-9:16 的对角线 = 2203px
-16:9 的对角线 = 2203px   ← 一样
-
-所以字号相同（260px），但横屏可用宽度是 1.78 倍
-→ 不是「把竖屏拉宽」，是「布局重排」
-```
-
-### 4. 小动作在灰度检测下等于没动
-
-`scale 0.94 → 1` 只改变 6% 面积，测不出来。
-
-**解法：全屏呼吸遮罩**，关键词窗口内 `alpha = 0.07 + 0.05*sin((t-T)*38)`。
-
-实测：卡字率 **60% → 100%**。
+See [docs/TTS-PLANS.md](docs/TTS-PLANS.md).
 
 ---
 
-## 目录结构
+## Why it works
+
+**This isn't a template pack. The core is a verifiable animation-timing method.**
+
+### 1. Kayzi: three numbers decide everything
+
+```
+At keyword time T:
+  · The visual action must complete at T − 50 ms  (not T)
+  · New elements appear no later than T − 200 ms
+  · The 1.35 s before T must be "quiet" — only 0.1 % more motion than
+    the preceding second is enough, but it must not be moving constantly
+```
+
+Based on ITU-R BT.1359: **audio leading video by 45 ms is perceptible;
+video leading audio needs 125 ms to be noticed.**
+
+### 2. Word count decides duration, not guesswork
+
+```
+duration = chars ÷ net_cps + total_pauses + intro_outro
+
+net_cps ≈ 5.0 (Chinese narration, measured)
+60 s → 229 chars
+90 s → 372 chars
+```
+
+### 3. Portrait vs landscape: font size scales by diagonal
+
+![ratio compare](demo/ratio-compare.png)
+
+*Same `scene-def.json`, same instant. Left 9:16 stacks vertically, right 16:9 splits
+left/right — not a rescale, a re-layout.*
+
+```
+diagonal of 9:16  = 2203 px
+diagonal of 16:9  = 2203 px   ← identical
+
+so font sizes match (260 px), while landscape has 1.78× usable width
+→ it's not "stretching portrait", it's "re-laying out"
+```
+
+### 4. Subtle motions vanish under grayscale downscaling
+
+`scale 0.94 → 1` changes only 6 % of pixels — invisible at 192×108 detection resolution.
+
+**Fix: a full-screen breathing overlay** inside the keyword window:
+`alpha = 0.07 + 0.05·sin((t − T)·38)`.
+
+Measured: sync rate **60% → 100%**.
+
+---
+
+## Repository layout
 
 ```
 .
-├── 工作流-v2.md            ★ 完整方法（9 步 + 附录）
-├── setup.py                环境检测 + 安装
-├── make_demo.py            生成示例片
+├── 工作流.md               ★ Full method (9 steps + appendices, Chinese)
+├── README.md               this file
+├── README.zh-CN.md         Chinese README
+├── setup.py                environment check + install wizard
+├── make_demo.py            one-command sample video
 │
 ├── tools/
-│   ├── detect_env.py       硬件检测，推荐 TTS 方案
-│   ├── gen_voice.py        配音（4 种后端）
-│   ├── align.py            逐字对齐（Whisper）
-│   ├── pace.py             停顿规整
-│   ├── lint_script.py      稿子体检
-│   ├── gate1.py            闸门 1：时间表定稿检查
-│   ├── kazi_check.py       卡字率测量
-│   ├── caption_check.py    字幕对齐检查
-│   ├── mix.py              BGM 让位 + 音效
-│   ├── gen_cover.cjs        封面（3 种尺寸）
-│   └── render.py           渲染（4 种比例）
+│   ├── detect_env.py       hardware probe → TTS tier recommendation
+│   ├── gen_voice.py        voice generation (4 backends)
+│   ├── align.py            word-level alignment (Whisper)
+│   ├── pace.py             silence normalization
+│   ├── lint_script.py      script health check
+│   ├── gate1.py            Gate 1: timeline sign-off
+│   ├── kazi_check.py       kayzi-rate measurement
+│   ├── caption_check.py    caption timing check
+│   ├── mix.py              BGM ducking + SFX
+│   ├── gen_cover.cjs       covers (per-aspect)
+│   └── render.cjs          renderer (4 aspects)
 │
-├── canvas/                 画布运行时
-│   ├── layout.js           布局引擎
-│   ├── scenes.js           10 个通用场景
-│   ├── anim.js             缓动与弹簧
-│   ├── time.js             时间查表
-│   └── canvas.html         主画布
+├── canvas/
+│   ├── layout.js           layout engine
+│   ├── scenes.js           10 generic scene types
+│   ├── anim.js             easing & springs
+│   ├── time.js             timeline lookup
+│   └── canvas.html         main canvas
 │
 ├── docs/
-│   ├── TTS-PLANS.md        TTS 方案对比
-│   ├── GETTING-STARTED.md  详细上手
-│   ├── PITFALLS.md         ★ 44 个踩过的坑
-│   └── PRINCIPLES.md       原理与依据
+│   ├── GETTING-STARTED.md  detailed walkthrough
+│   ├── PITFALLS.md         ★ 36 pitfalls, symptom → cause → fix
+│   └── TTS-PLANS.md        TTS tier comparison
 │
-└── demo/                   示例项目
+└── demo/                   sample project
 ```
 
 ---
 
-## 一条片子怎么走
+## Making your own video
 
 ```bash
-# 1. 建项目目录（一条片子一个目录）
+# 1. One video, one directory
 mkdir my-video && cd my-video
 
-# 2. 写稿（格式见 工作流 2.13）
-#    [01 开场]
-#    先说个词，叫卡字，就是画面动的那一下，正好跟字对上。 | 0.5
+# 2. Write the script (format in 工作流 §2.13)
+#    [01 opening]
+#    First a word: *kayzi*, the frame the picture moves. | 0.5
 
-# 3. 稿子体检
+# 3. Script health check
 python ../tools/lint_script.py script.md
 
-# 4. 配音
+# 4. Voice
 python ../tools/gen_voice.py . --backend edge-tts
 
-# 5. 对齐
+# 5. Align
 python ../tools/align.py .
 
-# 6. ⚠️ 闸门 1：时间表定稿（最关键的一关）
+# 6. ⚠️ Gate 1: timeline sign-off (the most important gate)
 python ../tools/gate1.py .
 
-# 7. 画面（写 scene-def.json，然后渲染）
-python ../tools/render.py . 9:16
+# 7. Visuals (write scene-def.json, then render)
+python ../canvas/render.cjs . 9:16
 
-# 8. 混音
+# 8. Mix
 python ../tools/mix.py . --bgm bgm.wav
 
-# 9. 检查
+# 9. Check
 python ../tools/kazi_check.py FINAL.mp4 --timeline timeline.json
 ```
 
-**第 6 步不能跳过。** 实测踩过：关键词全在段首第 0.3-0.8 秒，卡字率永远修不好，返工 2 小时。
+**Step 6 is not optional.** We measured: with keywords sitting in the first
+0.3–0.8 s of a paragraph, the kayzi rate can never be fixed — 2 hours of rework.
 
 ---
 
-## 四个闸门
+## The four gates
 
 ```
-写稿 → 配音 → 对时间
-              ↓
-      【闸门 1】时间表定稿
-              ↓
-      画画面 → 【闸门 2】局部渲 3 处
-              ↓
-            全片渲染
-              ↓
-      【闸门 3】抽帧看画面
-              ↓
-            修画面
-              ↓
-      【闸门 4】★ 再测卡字率
-              ↓
-      只重渲改动的段
+write → voice → align
+                  ↓
+          [Gate 1] timeline sign-off
+                  ↓
+        draw → [Gate 2] render 3 short segments
+                  ↓
+            full render
+                  ↓
+          [Gate 3] sample frames and inspect
+                  ↓
+            fix visuals
+                  ↓
+          [Gate 4] ★ re-measure kayzi rate
+                  ↓
+        re-render only the changed segments
 ```
 
-**闸门 4 最容易漏：改画面会改变帧间差异，卡字率会掉。** 实测 100% → 30%。
+**Gate 4 is the easiest to skip and the most expensive.** Changing visuals
+changes inter-frame deltas, which changes the "previous second" motion.
+Measured: 100 % → 30 %.
 
 ---
 
-## 授权
+## License
 
-| 组件 | 授权 |
+| Component | License |
 |---|---|
-| 本项目代码 | MIT |
-| `audiocpp` 引擎 | Apache-2.0（ShugoAI LLC）|
-| CosyVoice3 模型 | Apache-2.0（阿里）|
-| Kenney 音效 | CC0 |
-| edge-tts | 非官方接口，见免责声明 |
+| This project's code | MIT |
+| `audiocpp` engine | Apache-2.0 (ShugoAI LLC) — not bundled |
+| CosyVoice3 model | Apache-2.0 — not bundled |
+| Kenney interface sounds | CC0 |
+| edge-tts | GPL-3.0, unofficial API — see disclaimer |
 
-**⚠️ 本项目不含预训练声音。** 用本地模型时，请自己录 20 秒参考音。
+**No pretrained voices are included.** For voice cloning you record your own
+20-second sample.
 
-见 [DISCLAIMER.md](DISCLAIMER.md)。
-
----
-
-## 这条工作流是怎么来的
-
-**不是「研究出来」的，是「做砸 3 条片子之后总结出来的」。**
-
-- 5 次重渲 × 15 分钟 = 75 分钟，因为不知道「改画面会打掉卡字率」
-- 4 次重配音，因为手抄 PLAN 丢了关键词标记
-- 1 次卡字率 60%，因为小动作在灰度检测下测不出来
-
-**`docs/PITFALLS.md` 里 44 条，每条都是一次返工。**
+See [NOTICE.md](NOTICE.md) and [DISCLAIMER.md](DISCLAIMER.md).
 
 ---
 
-## 它不适合什么
+## How this workflow came to exist
 
-- **不适合纯文字视频**（不需要卡字，用剪映更快）
-- **不适合真人出镜**（这是无脸讲解）
-- **不适合需要高度定制动效的片子**（10 个通用场景，要特殊效果得自己写）
+**Not researched — earned.** Three videos were built wrong before the
+method stabilized:
+
+- 5 re-renders × 15 min, because nobody knew that fixing visuals breaks the kayzi rate
+- 4 re-voice runs, because a hand-copied line list silently dropped keyword markers
+- 1 sync rate stuck at 60 %, because subtle motions are invisible to grayscale detection
+
+**All 36 entries in [docs/PITFALLS.md](docs/PITFALLS.md) cost a rework cycle.**
+
+---
+
+## What it's not for
+
+- **Plain text videos** — no kayzi needed; use CapCut, faster
+- **Talking-head footage** — this is faceless explainer
+- **Heavily bespoke motion design** — 10 generic scenes; special effects need custom code
