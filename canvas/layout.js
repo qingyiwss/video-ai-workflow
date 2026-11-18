@@ -213,12 +213,19 @@ function make(ratioKey) {
   const G = {
     COLS: GRID_COLS,
     x: n => contentX() + gridX()[Math.max(0, Math.min(GRID_COLS, n))],
-    /** 从第 from 栏（0-based）起跨 span 栏 */
+    /** 从第 from 栏（0-based）起跨 span 栏（span 可以是小数） */
     col: (from, span) => {
       const xs = gridX();
       const a = Math.max(0, Math.min(GRID_COLS, from));
       const b = Math.max(0, Math.min(GRID_COLS, from + span));
-      return { x: contentX() + xs[a], w: xs[b] - xs[a] };
+      // ⚠️ span 可以是小数（如 2.4 栏），此时 xs[b] 不存在
+      // 用线性插值：xs[floor] + 小数部分 × 栏宽
+      const interp = (v) => {
+        const i = Math.floor(v), f = v - i;
+        if (i >= GRID_COLS) return xs[GRID_COLS];
+        return xs[i] + f * (xs[Math.min(i + 1, GRID_COLS)] - xs[i]);
+      };
+      return { x: contentX() + interp(a), w: interp(b) - interp(a) };
     },
     /** 内容区整体（0..12 栏） */
     content: () => ({ x: contentX(), w: contentW() }),
@@ -343,12 +350,21 @@ function make(ratioKey) {
     return _mctx;
   };
 
-  // 与 css.font 保持一致的字体族，测量才有意义
-  const FONT_STACK = '"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
+  // 两套字体族：
+  //   KaziSerif（思源宋体 600）—— 巨字、标题、引文（印刷感的来源）
+  //   KaziSans （思源黑体 400/500）—— 正文、注释、字幕
+  // 本地 woff2，不依赖系统字体。总 1.72 MB / 3953 字符。
+  const FONT_SERIF = "'KaziSerif',serif";
+  const FONT_SANS  = "'KaziSans',sans-serif";
+  const FONT_STACK = FONT_SANS;     // 兼容旧调用
 
-  const measureText = (str, px_, weight = 700) => {
+  // 哪些字号档用宋体（Display 级）
+  const SERIF_KEYS = new Set(['hero', 'h1', 'quote']);
+  const stackFor = (key) => SERIF_KEYS.has(key) ? FONT_SERIF : FONT_SANS;
+
+  const measureText = (str, px_, weight = 700, stack = FONT_SANS) => {
     const g = mctx();
-    g.font = `${weight} ${px_}px ${FONT_STACK}`;
+    g.font = `${weight} ${px_}px ${stack}`;
     return g.measureText(str).width;
   };
 
@@ -370,8 +386,9 @@ function make(ratioKey) {
     const minSize = Math.round(base * 0.38);   // 最多缩到 38%
 
     // 宽度 → 需要几行（按 maxW 折行）
+    const stack = stackFor(key);
     const linesAt = (px_) => {
-      const w = measureText(str, px_, weight);
+      const w = measureText(str, px_, weight, stack);
       return w <= maxW ? 1 : Math.ceil(w / maxW);
     };
 
@@ -393,7 +410,7 @@ function make(ratioKey) {
     ratio: ratioKey, name: R.name,
     W, H, isLandscape,
     font, pad, px, area, rows, cols, contentW, slots, heroSplit, fitFont,
-    measureText, FONT_STACK, G, baseline, snapY, snap4, contentX,
+    measureText, FONT_STACK, FONT_SERIF, FONT_SANS, stackFor, G, baseline, snapY, snap4, contentX,
     // 便捷：返回 CSS 字符串
     css: {
       font: (key, weight = 700) => `font:${weight} ${font(key)}px/1.2 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif`,

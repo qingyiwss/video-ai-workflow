@@ -25,7 +25,11 @@ const A = window.Anim;
 const CL = A.clamp, LP = A.lerp, IV = A.inv, E = A.E;
 const SPR = A.springTo, BL = A.bell;
 
-const FF = `'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif`;
+// 标题/巨字用宋体，正文用黑体
+const FF_SERIF = `'KaziSerif',serif`;
+const FF_SANS  = `'KaziSans',sans-serif`;
+// 兼容旧引用（默认黑体）
+const FF = FF_SANS;
 
 // ── 颜色（工作流 5.17）──
 const C = {
@@ -139,7 +143,7 @@ BUILDER.hero = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
       opacity:0">${kicker}</div>` : ''}
     <div id="ht" style="position:absolute;left:${G.x(0)}px;top:${titleTop}px;
       width:${maxW}px;
-      color:${fg};font:700 ${heroSize}px/1.08 ${FF};letter-spacing:-.02em;
+      color:${fg};font:600 ${heroSize}px/1.10 ${FF_SERIF};letter-spacing:-.01em;
       text-align:left;opacity:0;overflow:visible">${title}</div>
     <div id="hl" style="position:absolute;left:${G.x(0)}px;top:${ruleY}px;
       width:0;height:${RULE_H}px;background:${fg};opacity:0"></div>
@@ -195,7 +199,7 @@ BUILDER.points = ({ sc, L, data, hit, fg, sub, fs }) => {
         border-radius:50%;background:${C.warm};color:#fff;display:flex;
         align-items:center;justify-content:center;${fs('h2',700)};flex:none;
         margin-bottom:${Math.round(L.pad('gap')*0.30)}px">${i+1}</div>
-      <div style="width:100%;color:${fg};${fs('h2',600,1.35)};text-align:left">${it.title || it}</div>
+      <div style="width:100%;color:${fg};font-family:${FF_SERIF};font-size:${Math.round(L.font('h2')*1.05)}px;font-weight:600;line-height:1.35;text-align:left">${it.title || it}</div>
       ${it.desc ? `<div style="width:100%;color:${sub};${fs('label',500,1.5)};text-align:left">${it.desc}</div>` : ''}
     </div>`;
   }).join('');
@@ -208,8 +212,8 @@ BUILDER.points = ({ sc, L, data, hit, fg, sub, fs }) => {
       // 非关键词项：在 hit-2.0s 前依次出现完（不污染 before）
       // 关键词项：在 hit 时刻从下方升起 40% 行高（大位移）
       const st = isKw ? hit - 0.40 : (hit - 2.00 + i * 0.13);
-      const k = CL((time - st) / (isKw ? 0.42 : 0.18));
-      e.style.opacity = isKw ? CL((time - (hit - 0.40)) / 0.18) : k;
+      const k = CL((time - st) / (isKw ? 0.58 : 0.18));
+      e.style.opacity = isKw ? CL((time - (hit - 0.40)) / 0.24) : k;
       const dist = isKw ? sl[i].h * 1.4 : 24;
       e.style.transform = `translateY(${LP(dist, 0, isKw ? E.standard(k) : E.smooth(k))}px)`;
     });
@@ -241,7 +245,7 @@ BUILDER.steps = ({ sc, L, data, hit, fg, sub, fs }) => {
       <div style="width:${Math.round(L.font('h1')*0.95)}px;height:${Math.round(L.font('h1')*0.95)}px;
         border-radius:${Math.round(L.font('h1')*0.2)}px;background:${C.gold};color:#fff;
         display:flex;align-items:center;justify-content:center;${fs('h2',700)};flex:none">${i+1}</div>
-      <div style="color:${fg};${fs('h2',600,1.3)};text-align:${land?'center':'left'}">${it.title||it}</div>
+      <div style="color:${fg};font-family:${FF_SERIF};font-size:${Math.round(L.font('h2')*1.05)}px;font-weight:600;line-height:1.3;text-align:left">${it.title||it}</div>
     </div>`;
   }).join('');
   sc.innerHTML = html;
@@ -251,8 +255,8 @@ BUILDER.steps = ({ sc, L, data, hit, fg, sub, fs }) => {
     els.forEach((e, i) => {
       const isKw = (i === n - 1);
       const st = isKw ? hit - 0.40 : (hit - 1.90 + i * 0.12);
-      const k = CL((time - st) / (isKw ? 0.42 : 0.18));
-      e.style.opacity = isKw ? CL((time - (hit - 0.40)) / 0.18) : k;
+      const k = CL((time - st) / (isKw ? 0.58 : 0.18));
+      e.style.opacity = isKw ? CL((time - (hit - 0.40)) / 0.24) : k;
       // 关键词项：横向推入 40% 可用宽度（大位移）
       const dist = isKw ? (land ? L.W * 0.22 : L.W * 0.40) : 30;
       e.style.transform = `translateX(${LP(-dist, 0, E.standard(k))}px)`;
@@ -290,14 +294,14 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
       border-radius:${Math.round(L.font('body')*0.28)}px;background:${left.color||C.soft};
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
       gap:${Math.round(L.pad('gap')*0.5)}px;opacity:.30;box-sizing:border-box;padding:0 6%">
-      <div style="color:#fff;${fs('h2',700,1.25)};text-align:left">${left.title||''}</div>
+      <div style="color:#fff;${fs('h2',700,1.25)};text-align:left;font-family:${FF_SERIF};font-weight:600">${left.title||''}</div>
       ${left.desc ? `<div style="color:rgba(255,255,255,.8);${fs('label',500,1.4)};text-align:left">${left.desc}</div>` : ''}
     </div>
     <div id="cmpR" style="position:absolute;left:${rx}px;top:${ry}px;width:${rw}px;height:${rh}px;
       border-radius:${Math.round(L.font('body')*0.28)}px;background:${right.color||C.warm};
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
       gap:${Math.round(L.pad('gap')*0.5)}px;opacity:.30;box-sizing:border-box;padding:0 6%">
-      <div style="color:#fff;${fs('h2',700,1.25)};text-align:left">${right.title||''}</div>
+      <div style="color:#fff;${fs('h2',700,1.25)};text-align:left;font-family:${FF_SERIF};font-weight:600">${right.title||''}</div>
       ${right.desc ? `<div style="color:rgba(255,255,255,.85);${fs('label',500,1.4)};text-align:left">${right.desc}</div>` : ''}
     </div>`;
 
@@ -334,7 +338,7 @@ BUILDER.number = ({ sc, L, data, hit, fg, sub, fs }) => {
   const blockH = numH + (label ? Math.round(GAP * 1.6) + Math.round(labelSize * 1.3) : 0)
                + (sublabel ? Math.round(GAP * 0.6) + Math.round(subSize * 1.4) : 0)
                + Math.round(GAP * 0.9) + RULE_H;
-  const zoneTop = L.px(16, 'h'), zoneBot = L.px(78, 'h');
+  const zoneTop = L.px(20, 'h'), zoneBot = L.px(72, 'h');
   const topY = L.snap4(zoneTop + Math.max(0, (zoneBot - zoneTop - blockH) / 2));
 
   let cy = topY;
@@ -347,7 +351,7 @@ BUILDER.number = ({ sc, L, data, hit, fg, sub, fs }) => {
   sc.innerHTML = `
     <div id="nb" style="position:absolute;left:${col.x}px;top:${numTop}px;
       width:${col.w}px;color:${C.warm};
-      font:700 ${heroSize}px/1 ${FF};letter-spacing:-.02em;
+      font:600 ${heroSize}px/1.02 ${FF_SERIF};letter-spacing:-.01em;
       text-align:left;opacity:0;transform:scale(.9)">${value}<span style="font-size:.42em;margin-left:.06em">${unit}</span></div>
     ${label ? `<div id="nl" style="position:absolute;left:${col.x}px;top:${labelTop}px;
       width:${col.w}px;color:${fg};font:600 ${labelSize}px/1.3 ${FF};
@@ -417,16 +421,16 @@ BUILDER.quote = ({ sc, L, data, hit, fg, sub, fs }) => {
   const markTop = L.snap4(bodyTop - markSize * 0.55);
 
   const ruleY = L.snap4(bodyTop + bodyH + Math.round(GAP * 0.75));
-  const ruleW = Math.round(Math.min(bodyW, quoteCol.w) * 0.42);
+  const ruleW = Math.round(Math.min(bodyW, quoteCol.w) * 0.62);
 
   sc.innerHTML = `
     <div id="qm" style="position:absolute;left:${G.x(0)}px;top:${markTop}px;
       width:${G.col(0, 1).w}px;
-      color:${C.gold};font:700 ${markSize}px/0.8 ${FF};
+      color:${C.gold};font:600 ${markSize}px/0.8 ${FF_SERIF};
       opacity:.10;transform-origin:left top">“</div>
     <div id="qt" style="position:absolute;left:${quoteCol.x}px;top:${bodyTop}px;
       width:${quoteCol.w}px;
-      color:${fg};font:600 ${bodySize}px/1.45 ${FF};
+      color:${fg};font:600 ${bodySize}px/1.55 ${FF_SERIF};
       letter-spacing:-.01em;text-align:left;opacity:0">${text}</div>
     <div id="qline" style="position:absolute;left:${quoteCol.x}px;top:${ruleY}px;
       width:0;height:${RULE_H}px;background:${C.gold};opacity:0"></div>
@@ -449,13 +453,13 @@ BUILDER.quote = ({ sc, L, data, hit, fg, sub, fs }) => {
       qm.style.transform = `scale(${LP(0.80, 1, E.standard(kq))})`;
     }
     // 关键词元素：正文从左侧滑入 1.5 栏宽（真实位移）
-    const px_ = CL(E.standard(CL((time - (hit - 0.40)) / 0.52)));
+    const px_ = CL(E.standard(CL((time - (hit - 0.40)) / 0.62)));
     t.style.opacity = CL((time - (hit - 0.40)) / 0.20);
-    t.style.transform = `translateX(${LP(-G.col(0, 1.5).w, 0, px_)}px)`;
+    t.style.transform = `translateX(${LP(-G.col(0, 2.4).w, 0, px_)}px)`;
     // 底线从正文左边缘扫出
     if (ql) {
       ql.style.opacity = CL((time - (hit - 0.40)) / 0.16);
-      ql.style.width = (E.standard(CL((time - (hit - 0.40)) / 0.52)) * ruleW) + 'px';
+      ql.style.width = (E.standard(CL((time - (hit - 0.40)) / 0.62)) * ruleW) + 'px';
     }
   };
 };
@@ -485,7 +489,7 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
       gap:${Math.round(L.pad('gap')*0.55)}px;box-sizing:border-box;padding:0 ${Math.round(O*0.55)}px">
       <div style="color:${sub};${fs('label',600,1.2)};letter-spacing:.12em">${label1}</div>
       <div id="ba1" style="color:${sub};
-        font:700 ${before.size || L.font('h1')}px/1.15 ${FF};
+        font:600 ${before.size || L.font('h1')}px/1.20 ${FF_SERIF};
         text-align:left;opacity:.55;letter-spacing:-.01em">${before.title||''}</div>
       ${before.desc?`<div style="color:${sub};${fs('label',500,1.4)};opacity:.7">${before.desc}</div>`:''}
     </div>
@@ -494,7 +498,7 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
       gap:${Math.round(L.pad('gap')*0.55)}px;box-sizing:border-box;padding:0 ${Math.round(O*0.55)}px">
       <div style="color:${C.warm};${fs('label',600,1.2)};letter-spacing:.12em">${label2}</div>
       <div id="ba2" style="color:${fg};
-        font:700 ${after.size || L.font('h1')}px/1.15 ${FF};
+        font:600 ${after.size || L.font('h1')}px/1.20 ${FF_SERIF};
         text-align:left;opacity:0">${after.title||''}</div>
       ${after.desc?`<div id="ba2d" style="color:${sub};${fs('label',500,1.4)};opacity:0">${after.desc}</div>`:''}
     </div>`;
@@ -507,7 +511,7 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
     // 关键词：a2 整块从下方升起 22% 行高（真实位移，不是 scale）
     const p = CL(E.standard(CL((time - (hit - 0.40)) / 0.52)));
     a2.style.opacity = CL((time - (hit - 0.40)) / 0.20);
-    const rise = Math.round(L.font('h1') * 0.22);
+    const rise = Math.round(L.font('h1') * 0.34);
     a2.style.transform = `translateY(${LP(rise, 0, p)}px)`;
     if (ad) ad.style.opacity = CL((time - (hit - 0.40)) / 0.24);
   };
@@ -557,12 +561,13 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
   const { name = '', tagline = '', features = [] } = data;
   const hs = L.heroSplit(58);
   const O = L.pad('outer');
+  const nameSize = L.fitFont(name, hs.main.w * 0.90, 'hero', 1);
 
   sc.innerHTML = `
     <div style="position:absolute;left:${hs.main.x}px;top:${hs.main.y}px;
       width:${hs.main.w}px;height:${hs.main.h}px;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${L.pad('gap')}px">
-      <div id="pn" style="color:${fg};${fs('hero',700,1.1)};text-align:left;
+      display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:${L.pad('gap')}px">
+      <div id="pn" style="color:${fg};font:600 ${nameSize}px/1.10 ${FF_SERIF};letter-spacing:-.01em;text-align:left;
         opacity:0">${name}</div>
       <div id="pline" style="width:0;height:${Math.max(3, Math.round(L.H/640))}px;
         background:${C.warm};opacity:0"></div>
@@ -579,7 +584,6 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
   const pn = sc.querySelector('#pn'), pt = sc.querySelector('#pt');
   const pfs = [...sc.querySelectorAll('.pf')];
   const pl = sc.querySelector('#pline');
-  const nameSize = L.fitFont(name, hs.main.w * 0.9, 'hero', 1);
   return (time) => {
     // 铺垫：特性全部在 hit-1.8s 前出现完，不污染 before
     pfs.forEach((e, i) => {
@@ -589,7 +593,7 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
     // 关键词元素：产品名从下方升起 30% 字高 + 底线展开
     const k01 = CL(E.standard(CL((time - (hit - 0.40)) / 0.52)));
     pn.style.opacity = CL((time - (hit - 0.40)) / 0.20);
-    pn.style.transform = `translateY(${LP(nameSize * 0.30, 0, k01)}px)`;
+    pn.style.transform = `translateY(${LP(nameSize * 0.42, 0, k01)}px)`;
     if (pl) {
       pl.style.opacity = CL((time - (hit - 0.40)) / 0.16);
       pl.style.width = (E.standard(CL((time - (hit - 0.40)) / 0.52)) * hs.main.w * 0.45) + 'px';
@@ -601,10 +605,11 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
 BUILDER.cta = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
   const { main = '', subline = '', action = '' } = data;
   const O = L.pad('outer');
+  const mainSize = L.fitFont(main, L.G.col(0, 11).w, 'h1', 1);
   sc.innerHTML = `
     <div style="position:absolute;left:${O}px;width:${L.G.col(0,11).w}px;
       top:${L.px(22,'h')}px;text-align:left">
-      <div id="cm" style="color:${fg};${fs('h1',700,1.3)};opacity:0">${main}</div>
+      <div id="cm" style="color:${fg};font:600 ${mainSize}px/1.30 ${FF_SERIF};letter-spacing:-.01em;opacity:0">${main}</div>
       <div id="cline" style="display:inline-block;width:0;
         height:${Math.max(3, Math.round(L.H/640))}px;background:${C.warm};opacity:0;
         margin-top:${Math.round(L.pad('gap')*0.6)}px"></div>
@@ -618,10 +623,9 @@ BUILDER.cta = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
   const m = sc.querySelector('#cm'), s = sc.querySelector('#cs'), a = sc.querySelector('#ca');
   return (time) => {
     // 关键词元素：主标题从下方升起 32% 字高 + 底线展开
-    const mainSize = L.fitFont(main, L.W - O*2, 'h1', 1);
     const k01 = CL(E.standard(CL((time - (hit - 0.40)) / 0.52)));
     m.style.opacity = CL((time - (hit - 0.40))/0.18);
-    m.style.transform = `translateY(${LP(mainSize * 0.32, 0, k01)}px)`;
+    m.style.transform = `translateY(${LP(mainSize * 0.44, 0, k01)}px)`;
     if (sc.querySelector('#cline')) {
       const cl = sc.querySelector('#cline');
       cl.style.opacity = CL((time - (hit - 0.40)) / 0.16);
