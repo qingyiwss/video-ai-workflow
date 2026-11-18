@@ -1,4 +1,4 @@
-﻿# 鈹€鈹€ 妯″瀷锛堝お澶э紝鐢ㄦ埛鑷繁涓嬶級鈹€鈹€
+# 鈹€鈹€ 妯″瀷锛堝お澶э紝鐢ㄦ埛鑷繁涓嬶級鈹€鈹€
 models/
 *.gguf
 *.pth
@@ -72,3 +72,11 @@ _*.backup.md
 !docs/images/
 !docs/images/*.png
 !docs/images/*.gif
+
+# 场景测试（本地验证用，不入库）
+_scenetest/
+_verify/
+
+# 临时图
+_*.png
+!docs/images/*.png
