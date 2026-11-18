@@ -118,7 +118,7 @@ BUILDER.hero = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
     const p = SPR(time, hit - 0.46, hit);
     const k01 = CL(p);
     if (t) {
-      t.style.opacity = CL((time - (hit - 0.55)) / 0.25);
+      t.style.opacity = CL((time - (hit - 0.46)) / 0.18);
       // 从下方 35% 字高升到位
       t.style.transform = `translateY(${LP(heroSize * 0.35, 0, k01)}px)`;
     }
