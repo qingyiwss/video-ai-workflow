@@ -127,6 +127,88 @@ def detect_vulkan_devices(audiocpp_exe):
     return {"available": bool(devices), "devices": devices, "reason": "ok"}
 
 
+def detect_gpu_system():
+    """不依赖 audiocpp，直接从系统查有没有独显
+
+    为什么需要：
+      audiocpp 第一次跑时还没下载，但用户可能已经有显卡。
+      如果只看 --list-devices，会误判成「没显卡」→ 推荐 8 小时的 CPU 方案。
+      新人看到 8 小时可能直接关掉。
+
+    返回：{has_discrete, has_igpu, names[]}
+    """
+    out = {"has_discrete": False, "has_igpu": False,
+           "names": [], "discrete": [], "igpu": []}
+    system = platform.system()
+
+    if system == "Windows":
+        ps = 'Get-CimInstance Win32_VideoController | Select-Object Name | ConvertTo-Json'
+        txt, rc = run(["powershell", "-NoProfile", "-Command", ps])
+        if rc == 0 and txt.strip().startswith(("{", "[")):
+            try:
+                d = json.loads(txt)
+                if isinstance(d, dict):
+                    d = [d]
+                for g in d:
+                    name = (g.get("Name") or "").strip()
+                    if not name:
+                        continue
+                    low = name.lower()
+                    # ⚠️ 排除虚拟显示适配器（远程桌面 / 串流 / 虚拟机的假显卡）
+                    VIRTUAL = ["virtual", "gameviewer", "parsec", "sunshine",
+                               "basic display", "remote", "spacedesk",
+                               "mirror", "idd", "displaylink"]
+                    if any(v in low for v in VIRTUAL):
+                        continue
+                    out["names"].append(name)
+                    # 核显关键词
+                    if any(k in low for k in ["intel", "radeon(tm) graphics",
+                                               "uhd graphics", "iris", "vega 8",
+                                               "vega 11", "apu"]):
+                        out["has_igpu"] = True
+                        out["igpu"].append(name)
+                    # 独显关键词
+                    elif any(k in low for k in ["nvidia", "geforce", "rtx", "gtx",
+                                                "radeon rx", "arc a", "quadro", "tesla"]):
+                        out["has_discrete"] = True
+                        out["discrete"].append(name)
+            except Exception:
+                pass
+
+    elif system == "Darwin":
+        txt, rc = run(["system_profiler", "SPDisplaysDataType"])
+        if rc == 0:
+            # Apple Silicon 的 GPU 也算能跑
+            if "Apple M" in txt:
+                out["has_discrete"] = True
+                m = re.search(r"Chipset Model:\s*(.+)", txt)
+                out["names"].append(m.group(1).strip() if m else "Apple Silicon")
+            elif "AMD" in txt or "NVIDIA" in txt:
+                out["has_discrete"] = True
+                for m in re.finditer(r"Chipset Model:\s*(.+)", txt):
+                    out["names"].append(m.group(1).strip())
+
+    else:  # Linux
+        txt, rc = run(["bash", "-c", "lspci | grep -i -E 'vga|3d|display' || true"])
+        if rc == 0:
+            for line in txt.splitlines():
+                if ":" not in line:
+                    continue
+                name = line.split(":", 2)[-1].strip()
+                out["names"].append(name)
+                low = name.lower()
+                if any(k in low for k in ["nvidia", "amd", "radeon"]):
+                    # AMD 有可能是核显
+                    if "renoir" in low or "cezanne" in low or "vega" in low:
+                        out["has_igpu"] = True
+                    else:
+                        out["has_discrete"] = True
+                elif "intel" in low:
+                    out["has_igpu"] = True
+
+    return out
+
+
 def detect_gpu_wmi():
     """WMI 查显卡名和显存（显存可能不准，只能参考）"""
     out = []
@@ -204,6 +286,7 @@ def candidates(cpu, ram, vk, api_keys, tools):
     out = []
 
     # ① 独显
+    sysgpu = None
     if vk["available"]:
         gpus = [d for d in vk["devices"] if d["kind"] in ("gpu", "igpu")]
         discrete = [d for d in gpus if d["kind"] == "gpu"]
@@ -213,6 +296,20 @@ def candidates(cpu, ram, vk, api_keys, tools):
             out.append(("local-gpu", f"独显 {discrete[0]['name']}", GPU_SEC_PER_LINE))
         elif igpu and ram >= MIN_RAM_GB:
             out.append(("local-igpu", f"核显 {igpu[0]['name']}，比 CPU 快 3 倍左右",
+                        GPU_SEC_PER_LINE * 3))
+    else:
+        # 引擎还没下载，但从系统层看看有没有独显
+        sysgpu = detect_gpu_system()
+        if sysgpu["has_discrete"] and ram >= MIN_RAM_GB:
+            name = (sysgpu["discrete"][0] if sysgpu["discrete"]
+                    else (sysgpu["names"][0] if sysgpu["names"] else "独显"))
+            out.append(("local-gpu",
+                        f"检测到独显 {name}（需先下载引擎，setup.py 会引导）",
+                        GPU_SEC_PER_LINE))
+        elif sysgpu["has_igpu"] and ram >= MIN_RAM_GB:
+            name = (sysgpu["igpu"][0] if sysgpu["igpu"]
+                    else (sysgpu["names"][0] if sysgpu["names"] else "核显"))
+            out.append(("local-igpu", f"检测到核显 {name}（需先下载引擎）",
                         GPU_SEC_PER_LINE * 3))
 
     # ② 在线 API
@@ -375,7 +472,14 @@ def main():
             mark = "★" if d["kind"] == "gpu" else " "
             print(f"        {mark} {d['backend']}:{d['index']}  {d['name']}  [{d['kind']}]")
     else:
-        print(f"        ✗ 没有可用设备")
+        print(f"        ✗ 没有可用设备（引擎可能还没下载）")
+        sg = detect_gpu_system()
+        if sg["names"]:
+            print(f"        但从系统看，你有：")
+            for n in sg["names"][:3]:
+                print(f"          · {n}")
+            if sg["has_discrete"]:
+                print(f"        → 下载引擎后应该能用 GPU 加速")
 
     print(f"\n【工具】")
     for k, v in tools.items():
