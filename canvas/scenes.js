@@ -81,7 +81,7 @@ function build(cfg) {
 
 // ══════════════════════════════════════════════════════════
 // 各场景的 DOM + 动画
-// 约定：build 返回 update(t) 函数；动画必须在 [hit-0.35, hit+0.15] 内持续变化
+// 约定：build 返回 update(t) 函数；动画必须在 [hit - 0.44, hit+0.15] 内持续变化
 // ══════════════════════════════════════════════════════════
 const BUILDER = {};
 
@@ -115,7 +115,7 @@ BUILDER.hero = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
     // ⭐ 标题：从下方「顶上来」并压到底线，同时底部横线从左到右长出来。
     //    这两个都是真实位移 + 真实面积变化，不靠亮度波动。
     //    位移距离 = 字高的 35%（约 90px），横线从 0 长到 100% 宽。
-    const p = SPR(time, hit - 0.55, hit);
+    const p = SPR(time, hit - 0.46, hit);
     const k01 = CL(p);
     if (t) {
       t.style.opacity = CL((time - (hit - 0.55)) / 0.25);
@@ -124,8 +124,8 @@ BUILDER.hero = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
     }
     // 底线：hit 时刻正好铺满
     if (l) {
-      const lp = CL((time - (hit - 0.50)) / 0.50);
-      l.style.opacity = CL((time - (hit - 0.50)) / 0.15);
+      const lp = CL((time - (hit - 0.44)) / 0.40);
+      l.style.opacity = CL((time - (hit - 0.44)) / 0.12);
       l.style.width = (E.standard(lp) * m.w) + 'px';
     }
     // kicker 提前 12 帧出现
@@ -160,15 +160,15 @@ BUILDER.points = ({ sc, L, data, hit, fg, sub, fs }) => {
 
   const els = [...sc.querySelectorAll('.pt')];
   return (time) => {
-    // 依次出现，最后一个在 hit 到位
     els.forEach((e, i) => {
-      const st = hit - 0.20 - (n - 1 - i) * 0.18;
-      const k = CL((time - st) / 0.22);
-      e.style.opacity = k;
-      e.style.transform = `translateY(${LP(24, 0, E.smooth(k))}px)`;
-      // hit 那一刻全部亮一下
-      const flash = Math.max(0, 1 - Math.abs(time - hit) / 0.30);
-      if (k > 0.9) e.style.filter = `brightness(${1 + flash * 0.35})`;
+      const isKw = (i === n - 1);
+      // 非关键词项：在 hit-2.0s 前依次出现完（不污染 before）
+      // 关键词项：在 hit 时刻从下方升起 40% 行高（大位移）
+      const st = isKw ? hit - 0.46 : (hit - 2.00 + i * 0.13);
+      const k = CL((time - st) / (isKw ? 0.42 : 0.18));
+      e.style.opacity = isKw ? CL((time - (hit - 0.46)) / 0.15) : k;
+      const dist = isKw ? sl[i].h * 1.4 : 24;
+      e.style.transform = `translateY(${LP(dist, 0, isKw ? E.standard(k) : E.smooth(k))}px)`;
     });
   };
 };
@@ -206,12 +206,13 @@ BUILDER.steps = ({ sc, L, data, hit, fg, sub, fs }) => {
   const els = [...sc.querySelectorAll('.st')];
   return (time) => {
     els.forEach((e, i) => {
-      const st = hit - 0.15 - (n - 1 - i) * 0.16;
-      const k = CL((time - st) / 0.20);
-      e.style.opacity = k;
-      e.style.transform = land
-        ? `translateX(${LP(-30, 0, E.standard(k))}px)`
-        : `translateX(${LP(-30, 0, E.standard(k))}px)`;
+      const isKw = (i === n - 1);
+      const st = isKw ? hit - 0.46 : (hit - 1.90 + i * 0.12);
+      const k = CL((time - st) / (isKw ? 0.42 : 0.18));
+      e.style.opacity = isKw ? CL((time - (hit - 0.46)) / 0.15) : k;
+      // 关键词项：横向推入 40% 可用宽度（大位移）
+      const dist = isKw ? (land ? L.W * 0.22 : L.W * 0.40) : 30;
+      e.style.transform = `translateX(${LP(-dist, 0, E.standard(k))}px)`;
     });
   };
 };
@@ -260,7 +261,7 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
     // 左边先亮，右边在 hit 到位
     const kl = CL((time - (hit - 0.75)) / 0.30);
     el.style.opacity = LP(0.30, 0.72, E.smooth(kl));
-    const kr = SPR(time, hit - 0.45, hit);
+    const kr = SPR(time, hit - 0.46, hit);
     er.style.opacity = LP(0.30, 1, CL(kr));
     er.style.transform = `scale(${LP(0.94, 1, CL(kr))})`;
     // hit 时右边整块发光
@@ -285,21 +286,30 @@ BUILDER.number = ({ sc, L, data, hit, fg, sub, fs }) => {
         ${fs('h2',600,1.3)};opacity:0">${label}</div>` : ''}
       ${sublabel ? `<div id="ns" style="margin-top:${Math.round(L.pad('gap')*0.6)}px;
         color:${sub};${fs('body',500,1.4)};opacity:0">${sublabel}</div>` : ''}
+      <div id="nline" style="display:inline-block;width:0;height:${Math.max(3, Math.round(L.H/640))}px;
+        background:${C.warm};opacity:0;margin-top:${Math.round(L.pad('gap')*0.8)}px"></div>
     </div>`;
 
   const b = sc.querySelector('#nb'), l = sc.querySelector('#nl'), s = sc.querySelector('#ns');
   return (time) => {
-    // 数字从 0 滚到目标（hit 到位）
-    const p = SPR(time, hit - 0.70, hit);
+    // ⭐ 数字滚动 + 底线展开（真实动作，不靠亮度）
+    // 起点 = 目标值的 70%，避免「0 → 100」这种夸张滚程
+    const p = SPR(time, hit - 0.46, hit);
     const k = CL(p);
-    b.style.opacity = CL((time - (hit - 0.70)) / 0.20);
-    b.style.transform = `scale(${LP(0.9, 1, k)})`;
+    b.style.opacity = CL((time - (hit - 0.46)) / 0.15);
     // 数字滚动
     const m = String(value).match(/^(-?[\d.]+)(.*)$/);
     if (m) {
       const target = parseFloat(m[1]), suffix = m[2];
-      const cur = (target * k).toFixed(target % 1 === 0 ? 0 : 1);
+      const from = target * 0.70;
+      const cur = (from + (target - from) * k).toFixed(target % 1 === 0 ? 0 : 1);
       b.innerHTML = `${cur}${suffix}<span style="font-size:.42em;margin-left:.1em">${unit}</span>`;
+    }
+    // 底线从 0 展开到 60% 宽
+    if (sc.querySelector('#nline')) {
+      const nl = sc.querySelector('#nline');
+      nl.style.opacity = CL((time - (hit - 0.44)) / 0.12);
+      nl.style.width = (E.standard(CL((time - (hit - 0.44)) / 0.40)) * (L.W - O*2) * 0.30) + 'px';
     }
     if (l) l.style.opacity = CL((time - (hit + 0.05)) / 0.20);
     if (s) s.style.opacity = CL((time - (hit + 0.22)) / 0.22);
@@ -313,19 +323,37 @@ BUILDER.quote = ({ sc, L, data, hit, fg, sub, fs }) => {
   const cw = Math.min(L.W - O*2, Math.round(L.W * 0.82));
   const cx = (L.W - cw) / 2;
   sc.innerHTML = `
-    <div style="position:absolute;left:${cx}px;top:${L.px(24,'h')}px;width:${cw}px;
-      color:${C.gold};${fs('hero',700,1)};opacity:.30;line-height:.8">“</div>
+    <div id="qm" style="position:absolute;left:${cx}px;top:${L.px(24,'h')}px;width:${cw}px;
+      color:${C.gold};${fs('hero',700,1)};opacity:.10;line-height:.8;
+      transform-origin:left top">“</div>
     <div id="qt" style="position:absolute;left:${cx}px;top:${L.px(32,'h')}px;
       width:${cw}px;color:${fg};${fs('h1',600,1.45)};text-align:center;opacity:0">${text}</div>
+    <div id="qline" style="position:absolute;left:${cx + cw*0.25}px;
+      top:${L.px(32,'h') + L.font('h1')*1.45 + L.font('h1')*0.4}px;
+      width:0;height:${Math.max(3, Math.round(L.H/640))}px;background:${C.gold};opacity:0"></div>
     ${who ? `<div id="qw" style="position:absolute;left:${cx}px;bottom:${L.px(24,'h')}px;
       width:${cw}px;color:${sub};${fs('h2',500,1.3)};text-align:right;opacity:0">—— ${who}</div>` : ''}`;
 
   const t = sc.querySelector('#qt'), w = sc.querySelector('#qw');
+  const qm = sc.querySelector('#qm');
+  // ⚠️ 铺垫（署名）在 hit-1.9s 就出现完，不污染 before 窗口
   return (time) => {
-    const p = SPR(time, hit - 0.60, hit);
-    t.style.opacity = CL((time - (hit - 0.60)) / 0.25);
-    t.style.transform = `translateY(${LP(20, 0, CL(p))}px)`;
-    if (w) w.style.opacity = CL((time - (hit + 0.25)) / 0.25);
+    if (w) w.style.opacity = CL((time - (hit - 1.9)) / 0.25);
+    if (qm) {
+      const kq = CL((time - (hit - 1.9)) / 0.30);
+      qm.style.opacity = LP(0.10, 0.30, kq);
+      qm.style.transform = `scale(${LP(0.80, 1, E.standard(kq))})`;
+    }
+    // 关键词元素：正文从侧边滑入（整块横向位移 12% 屏宽）+ 淡入
+    const p = E.standard(CL((time - (hit - 0.46)) / 0.40));
+    t.style.opacity = CL((time - (hit - 0.46)) / 0.18);
+    t.style.transform = `translateX(${LP(-L.W * 0.12, 0, p)}px)`;
+    // 底部一条横线扫入，和 hero 一致
+    if (sc.querySelector('#qline')) {
+      const ql = sc.querySelector('#qline');
+      ql.style.opacity = CL((time - (hit - 0.44)) / 0.12);
+      ql.style.width = (E.standard(CL((time - (hit - 0.44)) / 0.40)) * cw * 0.5) + 'px';
+    }
   };
 };
 
@@ -375,7 +403,7 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
     // 改前保持暗淡
     a1.style.opacity = LP(0.55, 0.42, CL((time - (hit-0.9))/0.3));
     // 改后在 hit 到位
-    const p = SPR(time, hit - 0.45, hit);
+    const p = SPR(time, hit - 0.46, hit);
     a2.style.opacity = CL(p);
     a2.style.transform = `scale(${LP(0.92, 1, CL(p))})`;
     if (ad) ad.style.opacity = CL((time - (hit + 0.10)) / 0.20);
@@ -404,12 +432,19 @@ BUILDER.list = ({ sc, L, data, hit, fg, sub, fs }) => {
   }).join('');
 
   const els = [...sc.querySelectorAll('.li')];
+  // ⚠️ 所有条目在 hit-2.1s ~ hit-1.5s 之间出现完（留 0.6s 给 before 窗口保持安静）
+  const T_START = hit - 2.10;
+  const PER = n > 1 ? Math.min(0.16, 0.55 / (n - 1)) : 0;
   return (time) => {
     els.forEach((e, i) => {
-      const st = hit - 0.20 - (n-1-i)*0.14;
-      const k = CL((time - st) / 0.18);
+      const st = T_START + i * PER;
+      const k = CL((time - st) / 0.16);
+      // 关键词元素：最后一条在 hit 时刻整块左移到位（大位移，30% 屏宽）
+      const isKw = (i === n - 1);
       e.style.opacity = k;
-      e.style.transform = `translateX(${LP(-24, 0, E.standard(k))}px)`;
+      e.style.transform = isKw
+        ? `translateX(${LP(-L.W * 0.30, 0, E.standard(CL((time - (hit - 0.46)) / 0.40)))}px)`
+        : `translateX(${LP(-L.W * 0.30, 0, E.standard(k))}px)`;
     });
   };
 };
@@ -425,7 +460,9 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
       width:${hs.main.w}px;height:${hs.main.h}px;
       display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${L.pad('gap')}px">
       <div id="pn" style="color:${fg};${fs('hero',700,1.1)};text-align:center;
-        opacity:0;transform:scale(.92)">${name}</div>
+        opacity:0">${name}</div>
+      <div id="pline" style="width:0;height:${Math.max(3, Math.round(L.H/640))}px;
+        background:${C.warm};opacity:0"></div>
       ${tagline ? `<div id="pt" style="color:${C.warm};${fs('h2',600,1.35)};
         text-align:center;opacity:0">${tagline}</div>` : ''}
     </div>
@@ -438,14 +475,22 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
 
   const pn = sc.querySelector('#pn'), pt = sc.querySelector('#pt');
   const pfs = [...sc.querySelectorAll('.pf')];
+  const pl = sc.querySelector('#pline');
+  const nameSize = L.fitFont(name, hs.main.w * 0.9, 'hero', 1);
   return (time) => {
-    const p = SPR(time, hit - 0.55, hit);
-    pn.style.opacity = CL((time - (hit-0.55))/0.22);
-    pn.style.transform = `scale(${LP(0.92,1,CL(p))})`;
-    if (pt) pt.style.opacity = CL((time - (hit+0.08))/0.20);
-    pfs.forEach((e,i)=>{
-      e.style.opacity = CL((time - (hit + 0.20 + i*0.12))/0.18);
+    // 铺垫：特性全部在 hit-1.8s 前出现完，不污染 before
+    pfs.forEach((e, i) => {
+      e.style.opacity = CL((time - (hit - 2.10 + i * 0.12)) / 0.16);
     });
+    if (pt) pt.style.opacity = CL((time - (hit - 1.75)) / 0.20);
+    // 关键词元素：产品名从下方升起 30% 字高 + 底线展开
+    const k01 = CL(E.standard(CL((time - (hit - 0.46)) / 0.40)));
+    pn.style.opacity = CL((time - (hit - 0.46)) / 0.18);
+    pn.style.transform = `translateY(${LP(nameSize * 0.30, 0, k01)}px)`;
+    if (pl) {
+      pl.style.opacity = CL((time - (hit - 0.44)) / 0.12);
+      pl.style.width = (E.standard(CL((time - (hit - 0.44)) / 0.40)) * hs.main.w * 0.45) + 'px';
+    }
   };
 };
 
@@ -456,7 +501,10 @@ BUILDER.cta = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
   sc.innerHTML = `
     <div style="position:absolute;left:${O}px;right:${O}px;top:${L.px(22,'h')}px;
       text-align:center">
-      <div id="cm" style="color:${fg};${fs('h1',700,1.3)};opacity:0;transform:scale(.95)">${main}</div>
+      <div id="cm" style="color:${fg};${fs('h1',700,1.3)};opacity:0">${main}</div>
+      <div id="cline" style="display:inline-block;width:0;
+        height:${Math.max(3, Math.round(L.H/640))}px;background:${C.warm};opacity:0;
+        margin-top:${Math.round(L.pad('gap')*0.6)}px"></div>
       ${subline ? `<div id="cs" style="margin-top:${L.pad('gap')}px;color:${sub};
         ${fs('h2',500,1.4)};opacity:0">${subline}</div>` : ''}
       ${action ? `<div id="ca" style="margin-top:${Math.round(L.pad('gap')*1.4)}px;
@@ -466,13 +514,20 @@ BUILDER.cta = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
     </div>`;
   const m = sc.querySelector('#cm'), s = sc.querySelector('#cs'), a = sc.querySelector('#ca');
   return (time) => {
-    const p = SPR(time, hit - 0.55, hit);
-    m.style.opacity = CL((time - (hit-0.55))/0.22);
-    m.style.transform = `scale(${LP(0.95,1,CL(p))})`;
-    // ⚠️ 用 t0（进场）而不是 hit，避免关键词太晚导致不显示
-    if (s) s.style.opacity = CL((time - (t0 + 1.0))/0.28);
+    // 关键词元素：主标题从下方升起 32% 字高 + 底线展开
+    const mainSize = L.fitFont(main, L.W - O*2, 'h1', 1);
+    const k01 = CL(E.standard(CL((time - (hit - 0.46)) / 0.40)));
+    m.style.opacity = CL((time - (hit - 0.46))/0.18);
+    m.style.transform = `translateY(${LP(mainSize * 0.32, 0, k01)}px)`;
+    if (sc.querySelector('#cline')) {
+      const cl = sc.querySelector('#cline');
+      cl.style.opacity = CL((time - (hit - 0.44)) / 0.12);
+      cl.style.width = (E.standard(CL((time - (hit - 0.44)) / 0.40)) * (L.W - O*2) * 0.30) + 'px';
+    }
+    // 铺垫：副标题和按钮在 hit-1.9s 前出现完（不污染 before）
+    if (s) s.style.opacity = CL((time - (hit - 2.20))/0.28);
     if (a) {
-      const q = CL((time - (t0 + 1.5))/0.25);
+      const q = CL((time - (hit - 1.90))/0.25);
       a.style.opacity = q;
       a.style.transform = `scale(${LP(0.9,1,E.standard(q))})`;
     }
