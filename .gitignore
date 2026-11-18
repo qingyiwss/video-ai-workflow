@@ -1,20 +1,20 @@
-# ── 模型（太大，用户自己下）──
+﻿# 鈹€鈹€ 妯″瀷锛堝お澶э紝鐢ㄦ埛鑷繁涓嬶級鈹€鈹€
 models/
 *.gguf
 *.pth
 *.safetensors
 
-# ── TTS 引擎（用户自己下）──
+# 鈹€鈹€ TTS 寮曟搸锛堢敤鎴疯嚜宸变笅锛夆攢鈹€
 vendor/
 
-# ── 渲染产物 ──
+# 鈹€鈹€ 娓叉煋浜х墿 鈹€鈹€
 frames/
 frames-*/
 batch/
 *.mp4
 !demo/FINAL.mp4
 
-# ── 音频中间产物 ──
+# 鈹€鈹€ 闊抽涓棿浜х墿 鈹€鈹€
 out/
 mix.wav
 mix-final.wav
@@ -22,33 +22,33 @@ _bgm_flat.wav
 _norm_*.wav
 *.tmp.wav
 
-# ── 声音参考（个人隐私）──
+# 鈹€鈹€ 澹伴煶鍙傝€冿紙涓汉闅愮锛夆攢鈹€
 my-voice/
 !my-voice/.gitkeep
 *.wav
 !demo/narration.wav
 
-# ── Python ──
+# 鈹€鈹€ Python 鈹€鈹€
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 *.egg-info/
 
-# ── Node ──
+# 鈹€鈹€ Node 鈹€鈹€
 node_modules/
 
-# ── 用户配置（含绝对路径，不该提交）──
+# 鈹€鈹€ 鐢ㄦ埛閰嶇疆锛堝惈缁濆璺緞锛屼笉璇ユ彁浜わ級鈹€鈹€
 config.json
 !config.example.json
 
-# ── 编辑器 / 系统 ──
+# 鈹€鈹€ 缂栬緫鍣?/ 绯荤粺 鈹€鈹€
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
-# ── 日志 / 临时 ──
+# 鈹€鈹€ 鏃ュ織 / 涓存椂 鈹€鈹€
 *.log
 _setup-test/
 demo/lines/
@@ -62,3 +62,8 @@ demo/layout.js
 demo/scenes.js
 demo/canvas.html
 demo/render.cjs
+
+# 临时文件
+_m.txt
+_commitmsg.txt
+_*.backup.md
