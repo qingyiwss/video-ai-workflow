@@ -88,26 +88,64 @@ const BUILDER = {};
 // ─── 1. hero 大标题 ───
 BUILDER.hero = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
   const { title = '', kicker = '', note = '' } = data;
-  const hs = L.heroSplit(kicker || note ? 62 : 100);
-  const m = hs.main;
-  // ⭐ 按可用宽度自动缩字号（避免 4 个字换行）
-  const heroSize = L.fitFont(title, m.w * 0.94, 'hero', 1);   // 强制定一行
+  const G = L.G;
+  const land = L.isLandscape;
+  const O = L.pad('outer');
+
+  // ═══════════════════════════════════════════════════════
+  // 网格排版：先定字号，再让文字和底线都吸附到「文字实际占几栏」
+  //
+  // 之前错在「先定 10 栏，再按 10 栏缩字号」→ 字只占 4 栏，右侧空 6 栏。
+  // 正确顺序：
+  //   ① 用满宽（横屏 7 栏 / 竖屏 10 栏）算字号
+  //   ② 量文字实际宽度，换算成占几栏
+  //   ③ 底线宽度 = 文字实际宽度（不是栏宽）
+  // ═══════════════════════════════════════════════════════
+  const maxW = land ? G.col(0, 7).w : G.col(0, 10).w;
+  const heroSize = L.fitFont(title, maxW, 'hero', 1);
+  const textW = L.measureText(title, heroSize, 700);
+
+  // 底线：比文字略短（85%），视觉上像「压住」而不是「框住」
+  const ruleW = Math.round(textW * 0.85);
+
+  // ═══ 纵向：整块在 [区顶, 字幕顶] 之间垂直居中 ═══
+  // 之前固定 22% 起点，导致下方空 60%。改为算完总高再居中。
+  const RULE_H = Math.max(2, Math.round(L.H / 640));
+  const GAP = L.pad('gap');
+  const kickerH = kicker ? Math.round(L.font('h2') * 1.4) : 0;
+  const titleH = Math.round(heroSize * 1.08);
+  const noteH = note ? Math.round(L.font('body') * 1.7 * 2) : 0;   // 预留 2 行
+
+  // 竖屏：kicker → title → rule → note 纵向堆叠
+  // 横屏：kicker → title → rule 在左，note 在右（与 title 顶对齐），总高取两者较大
+  const stackH = kickerH + (kicker ? GAP : 0) + titleH + Math.round(GAP * 0.5)
+                 + RULE_H + (note && !land ? Math.round(GAP * 1.4) + noteH : 0);
+  const blockH = land ? Math.max(stackH, titleH + noteH) : stackH;
+
+  const zoneTop = L.px(14, 'h');
+  const zoneBot = L.px(land ? 76 : 82, 'h');
+  const topY = L.snap4(zoneTop + Math.max(0, (zoneBot - zoneTop - blockH) / 2));
+
+  const titleTop = L.snap4(topY + (kicker ? kickerH + GAP : 0));
+  const ruleY = L.snap4(titleTop + titleH + Math.round(GAP * 0.5));
+
+  // note：竖屏在底线下方、跨 8 栏；横屏在右 4 栏、与巨字顶对齐
+  const noteCol = land ? G.col(8, 4) : G.col(0, 8);
+  const noteTop = land ? titleTop : L.snap4(ruleY + Math.round(GAP * 1.4));
+
   sc.innerHTML = `
-    ${kicker ? `<div id="hk" style="position:absolute;left:${m.x}px;top:${m.y}px;
-      width:${m.w}px;color:${sub};${fs('h2', 600, 1.4)};opacity:0">${kicker}</div>` : ''}
-    <div id="ht" style="position:absolute;left:${m.x}px;
-      top:${m.y + (kicker ? L.font('h2') * 1.6 : 0)}px;
-      width:${m.w}px;height:${m.h - (kicker ? L.font('h2') * 1.6 : 0)}px;
-      display:flex;align-items:center;justify-content:center;overflow:visible;
+    ${kicker ? `<div id="hk" style="position:absolute;left:${G.x(0)}px;top:${topY}px;
+      width:${maxW}px;color:${sub};${fs('h2', 600, 1.4)};letter-spacing:.02em;
+      opacity:0">${kicker}</div>` : ''}
+    <div id="ht" style="position:absolute;left:${G.x(0)}px;top:${titleTop}px;
+      width:${maxW}px;
       color:${fg};font:700 ${heroSize}px/1.08 ${FF};letter-spacing:-.02em;
-      text-align:center;opacity:0">${title}</div>
-    <div id="hl" style="position:absolute;left:${m.x}px;
-      top:${m.y + (kicker ? L.font('h2') * 1.6 : 0) + m.h * 0.5 + heroSize * 0.62}px;
-      width:0;height:${Math.max(3, Math.round(heroSize * 0.035))}px;
-      background:${fg};opacity:0"></div>
-    ${note ? `<div id="hn" style="position:absolute;left:${hs.side.x}px;top:${hs.side.y}px;
-      width:${hs.side.w}px;height:${hs.side.h}px;
-      display:flex;align-items:center;color:${sub};${fs('body', 500, 1.55)};opacity:0">${note}</div>` : ''}`;
+      text-align:left;opacity:0;overflow:visible">${title}</div>
+    <div id="hl" style="position:absolute;left:${G.x(0)}px;top:${ruleY}px;
+      width:0;height:${RULE_H}px;background:${fg};opacity:0"></div>
+    ${note ? `<div id="hn" style="position:absolute;left:${noteCol.x}px;top:${noteTop}px;
+      width:${noteCol.w}px;color:${sub};${fs('body', 500, 1.7)};
+      text-wrap:balance;opacity:0">${note}</div>` : ''}`;
 
   const k = sc.querySelector('#hk'), t = sc.querySelector('#ht'),
         n = sc.querySelector('#hn'), l = sc.querySelector('#hl');
@@ -126,7 +164,7 @@ BUILDER.hero = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
     if (l) {
       const lp = CL((time - (hit - 0.44)) / 0.40);
       l.style.opacity = CL((time - (hit - 0.44)) / 0.12);
-      l.style.width = (E.standard(lp) * m.w) + 'px';
+      l.style.width = (E.standard(lp) * ruleW) + 'px';
     }
     // kicker 提前 12 帧出现
     if (k) k.style.opacity = CL((time - (hit - 0.85)) / 0.22);

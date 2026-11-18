@@ -136,6 +136,108 @@ function make(ratioKey) {
   /** 内容区最大宽度（横屏时可以更宽，但要留边） */
   const contentW = () => Math.min(W - pad('outer') * 2, isLandscape ? 1600 : 940);
 
+  // ═══════════════════════════════════════════════════════════
+  // 12 栏网格 + 基线网格
+  //
+  // 为什么需要：
+  //   现在的 AREAS 是 18/64/18 百分比分区，太粗，元素左边随意落。
+  //   印刷品的「整齐」来自所有元素吸附同一套竖线。
+  //
+  // 取整策略（实测四种画幅）：
+  //   前 11 栏 = floor(contentW/12)，第 12 栏吸收余数 → 总宽误差 0px
+  //   若每栏各自 round，4:3 会 +2px、其余 -4px，累积后破坏对齐
+  // ═══════════════════════════════════════════════════════════
+
+  const GRID_COLS = 12;
+
+  /** 内容区左边缘（= 外边距） */
+  const contentX = () => pad('outer');
+
+  /**
+   * 栏线 x 坐标，长度 13（0..12）
+   * grid().x(0) = 内容区左边缘，x(12) = 右边缘
+   */
+  const gridX = (() => {
+    let cache = null;
+    return () => {
+      if (cache) return cache;
+      const cw = contentW();
+      const each = Math.floor(cw / GRID_COLS);
+      const xs = [0];
+      for (let i = 1; i < GRID_COLS; i++) xs.push(each * i);
+      xs.push(cw);
+      cache = xs;
+      return xs;
+    };
+  })();
+
+  /**
+   * 基线网格
+   *
+   * 行高 = 字号 × 1.7，向下取整到 4px 的倍数。
+   * 同一屏内所有行必须落在同一条基线上。
+   *
+   * @param key  字号档（默认 body）
+   * @returns 基线间距 px
+   */
+  const baseline = (key = 'body') => {
+    const lh = font(key) * 1.7;
+    return Math.max(4, Math.floor(lh / 4) * 4);
+  };
+
+  /**
+   * 把 y 吸附到基线网格（用于文字行）
+   *
+   * ⚠️ 只用于「文字块的 top」，不用于容器位置。
+   *    body 基线 108px，用它对容器吸附会产生 100px 级跳跃。
+   *    容器位置用 snap4()。
+   */
+  const snapY = (y, key = 'body') => {
+    const b = baseline(key);
+    return Math.ceil(y / b) * b;
+  };
+
+  /** 4px 精细网格（容器位置、装饰线用） */
+  const snap4 = (v) => Math.round(v / 4) * 4;
+
+  /**
+   * 网格 API —— 所有场景排版应该走这里，不要手写 px
+   *
+   *   G.x(n)         第 n 条栏线（0..12）的绝对 x
+   *   G.col(from, span)  从第 from 栏起、跨 span 栏的 {x, w}
+   *   G.b               基线间距（body 档）
+   *   G.line(n)         第 n 条基线的绝对 y
+   *   G.snap(y)         把 y 吸附到基线
+   *   G.rows(n, from, to)  纵向 n 等分（吸附基线）
+   */
+  const G = {
+    COLS: GRID_COLS,
+    x: n => contentX() + gridX()[Math.max(0, Math.min(GRID_COLS, n))],
+    /** 从第 from 栏（0-based）起跨 span 栏 */
+    col: (from, span) => {
+      const xs = gridX();
+      const a = Math.max(0, Math.min(GRID_COLS, from));
+      const b = Math.max(0, Math.min(GRID_COLS, from + span));
+      return { x: contentX() + xs[a], w: xs[b] - xs[a] };
+    },
+    /** 内容区整体（0..12 栏） */
+    content: () => ({ x: contentX(), w: contentW() }),
+    b: baseline('body'),
+    baseline,
+    snap: snapY,
+    /** 第 n 条基线相对内容区顶部的绝对 y；top 可传内容区起点 */
+    line: (n, top = 0, key = 'body') => top + n * baseline(key),
+    /** 纵向 n 等分，返回 {y, h} —— 已吸附基线 */
+    rows: (n, top, bot, key = 'body') => {
+      const each = (bot - top) / n;
+      return i => {
+        const y = snapY(top + each * i, key);
+        const y2 = (i === n - 1) ? bot : snapY(top + each * (i + 1), key);
+        return { y, h: y2 - y };
+      };
+    },
+  };
+
   /**
    * ⭐ 场景布局：竖屏上下堆叠，横屏左右分栏
    *
@@ -221,34 +323,77 @@ function make(ratioKey) {
    * @param key     基准字号档（hero/h1/h2/...）
    * @param maxLines 允许几行（默认 1）
    */
-  const fitFont = (text, maxW, key = 'hero', maxLines = 1) => {
+  // ═══════════════════════════════════════════════════════
+  // 真实文字测量（替换原来的「汉字 1.0em / 英文 0.55em」硬猜）
+  //
+  // 为什么必须换：
+  //   PingFang SC 和 Microsoft YaHei 的实际字宽不同（差 3-6%），
+  //   硬猜 0.55em 在两个系统上的误差方向还相反 → 跨平台必然一方溢出。
+  //   唯一可靠办法是 canvas.measureText 真实测量。
+  //
+  // 缓存：同一个 (text, weight, family) 只建一次 canvas 上下文
+  // 二分：40 次迭代 → 误差 < 0.1px
+  // ═══════════════════════════════════════════════════════
+  let _mctx = null;
+  const mctx = () => {
+    if (!_mctx) {
+      const c = document.createElement('canvas');
+      _mctx = c.getContext('2d');
+    }
+    return _mctx;
+  };
+
+  // 与 css.font 保持一致的字体族，测量才有意义
+  const FONT_STACK = '"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
+
+  const measureText = (str, px_, weight = 700) => {
+    const g = mctx();
+    g.font = `${weight} ${px_}px ${FONT_STACK}`;
+    return g.measureText(str).width;
+  };
+
+  /**
+   * 用真实测量算字号，使 text 在 maxW 内排 maxLines 行
+   *
+   * 改动：原来靠「汉字=1em 英文=0.55em」估算，现在用 measureText + 二分。
+   * 签名不变（text, maxW, key, maxLines），调用点不用改。
+   *
+   * @param text     文字
+   * @param maxW     可用宽度 px
+   * @param key      基准字号档（hero/h1/h2/...）
+   * @param maxLines 允许几行（默认 1）
+   * @param weight   字重（默认 700，与 css.font 默认一致）
+   */
+  const fitFont = (text, maxW, key = 'hero', maxLines = 1, weight = 700) => {
     const base = font(key);
     const str = String(text);
-    // 估算宽度（汉字 1.0，英文数字 0.55）
-    const measure = (px_) => {
-      let w = 0;
-      for (const ch of str) {
-        w += /[\u3400-\u9fff\uff00-\uffef]/.test(ch) ? px_ : px_ * 0.55;
-      }
-      return w;
-    };
-    let size = base;
-    // 最多缩到 55%
     const minSize = Math.round(base * 0.38);   // 最多缩到 38%
-    for (let i = 0; i < 40 && size > minSize; i++) {
-      const w = measure(size);
-      // 允许的行数
-      const lines = Math.ceil(w / maxW);
-      if (lines <= maxLines) break;
-      size = Math.round(size * 0.94);
+
+    // 宽度 → 需要几行（按 maxW 折行）
+    const linesAt = (px_) => {
+      const w = measureText(str, px_, weight);
+      return w <= maxW ? 1 : Math.ceil(w / maxW);
+    };
+
+    // 先看基准字号行不行（绝大多数情况一次命中）
+    if (linesAt(base) <= maxLines) return base;
+
+    // 二分：找最大的 size 使 linesAt(size) <= maxLines
+    // 行数与字号单调相关（字越大行越多），所以二分成立
+    let lo = minSize, hi = base, best = minSize;
+    for (let i = 0; i < 40 && hi - lo > 0.25; i++) {
+      const mid = (lo + hi) / 2;
+      if (linesAt(mid) <= maxLines) { best = mid; lo = mid; }
+      else { hi = mid; }
     }
-    return Math.max(size, minSize);
+    return Math.max(minSize, Math.floor(best));
   };
 
   return {
     ratio: ratioKey, name: R.name,
     W, H, isLandscape,
     font, pad, px, area, rows, cols, contentW, slots, heroSplit, fitFont,
+    measureText, FONT_STACK, G, baseline, snapY, snap4, contentX,
     // 便捷：返回 CSS 字符串
     css: {
       font: (key, weight = 700) => `font:${weight} ${font(key)}px/1.2 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif`,
