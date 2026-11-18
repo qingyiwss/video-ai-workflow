@@ -39,27 +39,32 @@ Paste the full table from `kazi_check.py`:
 
 ## If the failing scenes are "subtle motion" types
 
-**That is expected without a breathing overlay.** Add one:
+**Do not add a full-screen brightness overlay.** We did that, then removed it.
+
+It lifted the metric from 60% to 100% while the frame-internal spatial deviation
+stayed flat (31.03 → 29.20). Nothing in the picture moved — it was pure
+whole-screen flicker at 6 Hz, and it only ran inside the detection window.
+
+**Instead, make the motion real.** Example from `hero`:
 
 ```js
-// in canvas/scenes.js build(), AFTER upd() returns
-const overlay = document.createElement('div');
-overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:20;opacity:0';
-sc.appendChild(overlay);
-// then in update(t):
-const inWin = t >= hit - 0.35 && t <= hit + 0.15;
-if (inWin) {
-  const wob = 0.07 + 0.05 * Math.sin((t - hit) * 38 + 1.2);
-  overlay.style.background = `rgba(26,28,31,${wob})`;   // light theme
-  overlay.style.opacity = 1;
-} else {
-  overlay.style.opacity = 0;
-}
+// ❌ old: scale only — 6% of pixels
+t.style.transform = `scale(${LP(0.94, 1, k01)})`;
+
+// ✓ new: rise 35% of the glyph height + a rule sweeps to full width
+t.style.transform = `translateY(${LP(heroSize * 0.35, 0, k01)}px)`;
+l.style.width = (E.standard(lp) * m.w) + 'px';
 ```
 
-Measured: 60% → 100%.
+| version | near | ratio | spatial structure |
+|---|---|---|---|
+| `scale 0.94→1` | 0.22% | 0.5× | — |
+| ✗ brightness overlay | 11.61% | ~5× | **unchanged (fake)** |
+| ✓ real motion | **1.33%** | **2.1×** | **changed (real)** |
 
-⚠️ The overlay **must** be appended after `upd()`. Scenes set `sc.innerHTML`, which wipes children.
+The real motion scores 8× lower and is the only one a viewer can see.
+
+See [PITFALLS 坑 20](../../docs/PITFALLS.md) for the full comparison per scene.
 
 ## If `before` is polluted (before > 0.5%)
 

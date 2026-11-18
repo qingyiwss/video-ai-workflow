@@ -110,14 +110,29 @@ so font sizes match (260 px), while landscape has 1.78× usable width
 → it's not "stretching portrait", it's "re-laying out"
 ```
 
-### 4. Subtle motions vanish under grayscale downscaling
+### 4. Subtle motions vanish — make them real, not fake
 
 `scale 0.94 → 1` changes only 6 % of pixels — invisible at 192×108 detection resolution.
 
-**Fix: a full-screen breathing overlay** inside the keyword window:
-`alpha = 0.07 + 0.05·sin((t − T)·38)`.
+**The wrong fix** (which we shipped, then removed): a full-screen alpha oscillation
+inside the keyword window. It lifted the metric from 60 % to 100 % while changing
+the frame-internal spatial deviation from 31.03 to 29.20 — i.e. **nothing in the
+picture actually moved**. All of it was whole-screen brightness flicker at 6 Hz.
 
-Measured: sync rate **60% → 100%**.
+**The right fix**: replace the small motion with a real one. Same scene, no overlay:
+
+| | near | ratio | spatial structure |
+|---|---|---|---|
+| `scale 0.94→1` | 0.22 % | 0.5× | — |
+| ~~breathing overlay~~ | 11.61 % | ~5× | **unchanged (fake)** |
+| **title rises 35 % of its height + rule sweeps in** | **1.33 %** | **2.1×** | **changed (real)** |
+
+The real motion scores **8× lower** than the overlay and is the only one of the two
+that a viewer can see.
+
+**The rule**: when the metric fails, look at the frames and find what genuinely
+isn't moving. Then make that motion bigger or more meaningful. Never generate a
+signal to satisfy the detector.
 
 ---
 

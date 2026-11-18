@@ -61,45 +61,22 @@ function build(cfg) {
     return { el: sc, update: () => {} };
   }
 
-  // ⭐⭐⭐ 通用兜底：全屏呼吸遮罩
+  // ⛔ 已禁用：全屏呼吸遮罩
   //
-  // 依据：工作流附录 C「文字动效在灰度检测下等于没动」
+  // 曾经在这里加过一层全屏 alpha 波动，把卡字率从 60% 拉到 100%。
+  // 但实测证明它只是「制造了亮度抖动」，不是内容在动：
   //
-  // 问题：hero 的 scale 0.94→1 只变 6% 面积；quote 上移 20px 位移不改像素。
-  //       在 192×108 灰度缩放下，这些变化测不出来 → 卡字率掉。
+  //   每像素时间标准差  0.26 → 7.75 灰阶   （涨 30 倍）
+  //   帧内空间标准差   31.03 → 29.20      （几乎不变）
+  //   → 全屏同相位亮暗波动，没有任何「内容在动」的信息
   //
-  // 解法：在 near 窗口 [hit-0.35, hit+0.15] 里，整屏叠一层会呼吸的遮罩。
-  //       每帧变一次，覆盖全部像素 → 面积足够。
+  // 23.7 灰阶 / 6 Hz 的全屏闪动，人眼能看到，但那是闪烁不是动画。
+  // 而且它只在检测窗口里打开 —— 纯粹为了过指标。
   //
-  // 实测：某场景靠这个从 2.8x 提到 247x。
-  // ⚠️ 必须在 upd() 之后再加 overlay ——
-  // 场景的 upd() 里是 sc.innerHTML = `...`，会清空 sc 的所有子节点
+  // 正确的做法：让场景动画本身够大、够真实。
+  // 指标上不去，说明动画真的不够，那就去改动画。
   const inner = upd({ sc, L, data, hit, t0, t1, fg, sub, bg, fs, theme });
-
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:20;opacity:0';
-  sc.appendChild(overlay);
-
-  return {
-    el: sc,
-    update: (time) => {
-      inner(time);
-      // 呼吸遮罩：只在该窗口内开
-      const inWin = time >= hit - 0.35 && time <= hit + 0.15;
-      if (inWin) {
-        // 振幅要够大才测得出来：0.04-0.10（面积 100% × 振幅变化 6%）
-        const wob = 0.07 + 0.05 * Math.sin((time - hit) * 38 + 1.2);
-        // 亮色场景用暗遮罩，暗色场景用亮遮罩
-        const dark = (theme === 'dark' || theme === 'red');
-        overlay.style.background = dark
-          ? `rgba(255,255,255,${wob})`
-          : `rgba(26,28,31,${wob})`;
-        overlay.style.opacity = 1;
-      } else {
-        overlay.style.opacity = 0;
-      }
-    },
-  };
+  return { el: sc, update: inner };
 }
 
 // ══════════════════════════════════════════════════════════
@@ -121,20 +98,35 @@ BUILDER.hero = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
     <div id="ht" style="position:absolute;left:${m.x}px;
       top:${m.y + (kicker ? L.font('h2') * 1.6 : 0)}px;
       width:${m.w}px;height:${m.h - (kicker ? L.font('h2') * 1.6 : 0)}px;
-      display:flex;align-items:center;justify-content:center;
+      display:flex;align-items:center;justify-content:center;overflow:visible;
       color:${fg};font:700 ${heroSize}px/1.08 ${FF};letter-spacing:-.02em;
-      text-align:center;opacity:0;transform:scale(.94)">${title}</div>
+      text-align:center;opacity:0">${title}</div>
+    <div id="hl" style="position:absolute;left:${m.x}px;
+      top:${m.y + (kicker ? L.font('h2') * 1.6 : 0) + m.h * 0.5 + heroSize * 0.62}px;
+      width:0;height:${Math.max(3, Math.round(heroSize * 0.035))}px;
+      background:${fg};opacity:0"></div>
     ${note ? `<div id="hn" style="position:absolute;left:${hs.side.x}px;top:${hs.side.y}px;
       width:${hs.side.w}px;height:${hs.side.h}px;
       display:flex;align-items:center;color:${sub};${fs('body', 500, 1.55)};opacity:0">${note}</div>` : ''}`;
 
-  const k = sc.querySelector('#hk'), t = sc.querySelector('#ht'), n = sc.querySelector('#hn');
+  const k = sc.querySelector('#hk'), t = sc.querySelector('#ht'),
+        n = sc.querySelector('#hn'), l = sc.querySelector('#hl');
   return (time) => {
-    // 标题：hit 这一刻到位（整块放大，面积大）
+    // ⭐ 标题：从下方「顶上来」并压到底线，同时底部横线从左到右长出来。
+    //    这两个都是真实位移 + 真实面积变化，不靠亮度波动。
+    //    位移距离 = 字高的 35%（约 90px），横线从 0 长到 100% 宽。
     const p = SPR(time, hit - 0.55, hit);
+    const k01 = CL(p);
     if (t) {
       t.style.opacity = CL((time - (hit - 0.55)) / 0.25);
-      t.style.transform = `scale(${LP(0.94, 1, CL(p))})`;
+      // 从下方 35% 字高升到位
+      t.style.transform = `translateY(${LP(heroSize * 0.35, 0, k01)}px)`;
+    }
+    // 底线：hit 时刻正好铺满
+    if (l) {
+      const lp = CL((time - (hit - 0.50)) / 0.50);
+      l.style.opacity = CL((time - (hit - 0.50)) / 0.15);
+      l.style.width = (E.standard(lp) * m.w) + 'px';
     }
     // kicker 提前 12 帧出现
     if (k) k.style.opacity = CL((time - (hit - 0.85)) / 0.22);
