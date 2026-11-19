@@ -1,20 +1,20 @@
-# 鈹€鈹€ 妯″瀷锛堝お澶э紝鐢ㄦ埛鑷繁涓嬶級鈹€鈹€
+# 閳光偓閳光偓 濡€崇€烽敍鍫濄亰婢堆嶇礉閻劍鍩涢懛顏勭箒娑撳绱氶埞鈧埞鈧?
 models/
 *.gguf
 *.pth
 *.safetensors
 
-# 鈹€鈹€ TTS 寮曟搸锛堢敤鎴疯嚜宸变笅锛夆攢鈹€
+# 閳光偓閳光偓 TTS 瀵洘鎼搁敍鍫㈡暏閹寸柉鍤滃鍙樼瑓閿涘鏀㈤埞鈧?
 vendor/
 
-# 鈹€鈹€ 娓叉煋浜х墿 鈹€鈹€
+# 閳光偓閳光偓 濞撳弶鐓嬫禍褏澧?閳光偓閳光偓
 frames/
 frames-*/
 batch/
 *.mp4
 !demo/FINAL.mp4
 
-# 鈹€鈹€ 闊抽涓棿浜х墿 鈹€鈹€
+# 閳光偓閳光偓 闂婃娊顣舵稉顓㈡？娴溠呭⒖ 閳光偓閳光偓
 out/
 mix.wav
 mix-final.wav
@@ -22,33 +22,33 @@ _bgm_flat.wav
 _norm_*.wav
 *.tmp.wav
 
-# 鈹€鈹€ 澹伴煶鍙傝€冿紙涓汉闅愮锛夆攢鈹€
+# 閳光偓閳光偓 婢逛即鐓堕崣鍌濃偓鍐跨礄娑擃亙姹夐梾鎰潌閿涘鏀㈤埞鈧?
 my-voice/
 !my-voice/.gitkeep
 *.wav
 !demo/narration.wav
 
-# 鈹€鈹€ Python 鈹€鈹€
+# 閳光偓閳光偓 Python 閳光偓閳光偓
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 *.egg-info/
 
-# 鈹€鈹€ Node 鈹€鈹€
+# 閳光偓閳光偓 Node 閳光偓閳光偓
 node_modules/
 
-# 鈹€鈹€ 鐢ㄦ埛閰嶇疆锛堝惈缁濆璺緞锛屼笉璇ユ彁浜わ級鈹€鈹€
+# 閳光偓閳光偓 閻劍鍩涢柊宥囩枂閿涘牆鎯堢紒婵嗩嚠鐠侯垰绶為敍灞肩瑝鐠囥儲褰佹禍銈忕礆閳光偓閳光偓
 config.json
 !config.example.json
 
-# 鈹€鈹€ 缂栬緫鍣?/ 绯荤粺 鈹€鈹€
+# 閳光偓閳光偓 缂傛牞绶崳?/ 缁崵绮?閳光偓閳光偓
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
-# 鈹€鈹€ 鏃ュ織 / 涓存椂 鈹€鈹€
+# 閳光偓閳光偓 閺冦儱绻?/ 娑撳瓨妞?閳光偓閳光偓
 *.log
 _setup-test/
 demo/lines/
@@ -63,20 +63,22 @@ demo/scenes.js
 demo/canvas.html
 demo/render.cjs
 
-# 临时文件
+# 涓存椂鏂囦欢
 _m.txt
 _commitmsg.txt
 _*.backup.md
 
-# 展示素材（不能删，README 引用）
+# 灞曠ず绱犳潗锛堜笉鑳藉垹锛孯EADME 寮曠敤锛?
 !docs/images/
 !docs/images/*.png
 !docs/images/*.gif
 
-# 场景测试（本地验证用，不入库）
-_scenetest/
+# 鍦烘櫙娴嬭瘯锛堟湰鍦伴獙璇佺敤锛屼笉鍏ュ簱锛?_scenetest/
 _verify/
 
-# 临时图
-_*.png
+# 涓存椂鍥?_*.png
 !docs/images/*.png
+
+_ck.txt
+_chars*.txt
+_t[0-9]*.ttf
