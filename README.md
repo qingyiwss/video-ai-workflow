@@ -41,7 +41,7 @@ corresponding action on that exact frame. Not before, not after.
 git clone https://github.com/qingyiwss/video-ai-workflow
 cd video-ai-workflow
 python setup.py            # detects your hardware, recommends a TTS tier
-python make_demo.py        # generates a 15-second sample
+python make_demo.py        # generates a sample video
 ```
 
 The third step produces `demo/FINAL.mp4`. Watch it.

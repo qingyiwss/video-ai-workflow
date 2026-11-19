@@ -47,7 +47,7 @@ python setup.py
 python make_demo.py
 ```
 
-**第 3 步会生成一条 15 秒的示例片子。** 看 `demo/FINAL.mp4`。
+**第 3 步会生成一条示例片子（当前约 31 秒）。** 看 `demo/FINAL.mp4`。
 
 ---
 
@@ -136,7 +136,7 @@ python make_demo.py
 
 ```
 .
-├── 工作流-v2.md            ★ 完整方法（9 步 + 附录）
+├── 工作流.md            ★ 完整方法（9 步 + 附录）
 ├── setup.py                环境检测 + 安装
 ├── make_demo.py            生成示例片
 │
@@ -194,7 +194,7 @@ python ../tools/align.py .
 python ../tools/gate1.py .
 
 ＃ 7. 画面（写 scene-def.json，然后渲染）
-python ../tools/render.py . 9:16
+node ../canvas/render.cjs . 9:16
 
 ＃ 8. 混音
 python ../tools/mix.py . --bgm bgm.wav
