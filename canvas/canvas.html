@@ -45,8 +45,17 @@ html,body{margin:0;padding:0;overflow:hidden;
 #tcVal{font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.04em}
 #stage.dark #tcVal,#stage.red #tcVal{color:rgba(242,239,230,.9)}
 
+/* 页眉栏线：横贯内容区，1px，低对比 */
+#hr{position:absolute;z-index:5;height:1px;background:currentColor;opacity:.18}
+/* 页脚栏线 */
+#fr{position:absolute;z-index:5;height:1px;background:currentColor;opacity:.18}
+
 #scenes{position:absolute;inset:0;z-index:4}
 .scene{position:absolute;inset:0;opacity:0;will-change:opacity}
+
+#folio{position:absolute;z-index:6;font-weight:500;letter-spacing:.10em;
+  opacity:.42;font-variant-numeric:tabular-nums}
+#folioT{opacity:.6}
 
 #prog{position:absolute;z-index:6;background:rgba(140,133,120,.22)}
 #prog .fill{height:100%;background:currentColor;opacity:.28;width:0}
@@ -67,10 +76,13 @@ html,body{margin:0;padding:0;overflow:hidden;
   <canvas id="grain" width="270" height="480"></canvas>
   <div id="vign"></div>
   <div id="themeWash"></div>
+  <div id="hr"></div>
   <div id="chap"><div class="num" id="chapNum">01</div>
     <div class="cn" id="chapCn"></div><div class="en" id="chapEn"></div></div>
   <div id="tc"><div class="lbl" id="tcLbl">TC</div><div id="tcVal">00:00</div></div>
   <div id="scenes"></div>
+  <div id="fr"></div>
+  <div id="folio"><span id="folioN">01</span><span id="folioT">/ 10</span></div>
   <div id="prog"><div class="fill" id="progFill"></div></div>
   <div id="cap"><div class="row" id="caprow"></div></div>
 </div>
@@ -317,6 +329,10 @@ window.renderFrame = function (t) {
     `${String(Math.floor(t/60)).padStart(2,'0')}:${String(Math.floor(t%60)).padStart(2,'0')}`;
   el('progFill').style.width = (CL(t/total) * 100).toFixed(2) + '%';
 
+  // 页码：当前场景序号 / 总数
+  el('folioN').textContent = String(cur.sid).padStart(2, '0');
+  el('folioT').textContent = '/ ' + String(SCENES.length).padStart(2, '0');
+
   // 场景自己的动效
   cur.update(t);
 
@@ -353,6 +369,24 @@ window.initScene = function () {
   el('tc').style.top = O + 'px';
   el('tcVal').style.fontSize = L.font('label') * 0.6 + 'px';
   el('tcLbl').style.fontSize = L.font('micro') * 0.8 + 'px';
+
+  // ═══ 印刷品结构：页眉栏线 + 页脚栏线 + 页码 ═══
+  // 栏线横贯内容区（左边缘到右边缘），1px，低对比
+  const cw = L.W - O * 2;
+  const hrY = Math.round(O + L.font('h1') * 0.46 + L.pad('gap') * 0.85);
+  el('hr').style.left = O + 'px';
+  el('hr').style.width = cw + 'px';
+  el('hr').style.top = hrY + 'px';
+
+  const frY = L.H - Math.round(O * 1.70);
+  el('fr').style.left = O + 'px';
+  el('fr').style.width = cw + 'px';
+  el('fr').style.top = frY + 'px';
+
+  // 页码：右对齐到内容区右边缘，坐在页脚栏线上方
+  el('folio').style.right = O + 'px';
+  el('folio').style.top = (frY - L.font('micro') * 2.0) + 'px';
+  el('folio').style.fontSize = L.font('micro') * 0.92 + 'px';
 
   // 进度条
   el('prog').style.left = O + 'px';
