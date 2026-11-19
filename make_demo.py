@@ -192,8 +192,9 @@ def main():
     env["KAZI_CHROME"] = P.chrome
     env["KAZI_PUPPETEER"] = P.puppeteer
 
-    ok, out = run([node, str(DEMO/"render.cjs"), str(DEMO), a.ratio],
-                  timeout=1800, label=f"render.cjs {a.ratio}")
+    # 用 tools/render.cjs（支持断点续跑 + 分段并发），不是 canvas 的单页版
+    ok, out = run([node, str(ROOT/"tools/render.cjs"), str(DEMO), a.ratio],
+                  timeout=1800, label=f"tools/render.cjs {a.ratio}")
     frames = list((DEMO / "frames").glob("*.png")) if (DEMO/"frames").exists() else []
     print(f"  {len(frames)} 帧")
     if not frames:
