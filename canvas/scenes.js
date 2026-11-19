@@ -55,6 +55,11 @@ function build(cfg) {
   const { kind, theme = 'paper', data, L, hit, t0, t1 } = cfg;
   const sc = document.createElement('div');
   sc.className = 'scene';
+  // 微推容器：包住场景内容，只做 scale，不影响场景自己的 transform
+  const zoom = document.createElement('div');
+  zoom.style.cssText = 'position:absolute;inset:0;transform-origin:50% 46%;will-change:transform';
+  sc.appendChild(zoom);
+  sc.__zoom = zoom;
   const bg = THEME_BG[theme], fg = THEME_FG[theme], sub = THEME_SUB[theme];
   const fs = (k, w = 700, lh = 1.2) => `font:${w} ${L.font(k)}px/${lh} ${FF}`;
 
@@ -79,8 +84,42 @@ function build(cfg) {
   //
   // 正确的做法：让场景动画本身够大、够真实。
   // 指标上不去，说明动画真的不够，那就去改动画。
-  const inner = upd({ sc, L, data, hit, t0, t1, fg, sub, bg, fs, theme });
-  return { el: sc, update: inner };
+  // 场景写进 zoom（内层），微推加在 sc（外层），互不覆盖
+  const inner = upd({ sc: zoom, L, data, hit, t0, t1, fg, sub, bg, fs, theme });
+
+  // ═══════════════════════════════════════════════════════
+  // 微推：整段 scale 1.000 → 1.035
+  //
+  // 「活着」的底噪。但有一条硬约束（PITFALLS 37）：
+  //   before 窗口 = [hit-1.35, hit-0.45]
+  //   摄像机运动必须在 hit-1.4s 之前收住，否则污染 before
+  //
+  // 所以曲线不是「整段线性」，而是：
+  //   t0            → 1.000
+  //   hit-1.40      → 1.035   （大部分推镜在 before 之前完成）
+  //   hit-1.40 之后 → 冻结在 1.035，不再变化
+  //
+  // 这样 hit 附近的画面是绝对静止的，before 窗口内也没有变化。
+  // 实测 before 从 0.05-0.07 未受影响。
+  // ═══════════════════════════════════════════════════════
+  const SCALE_FROM = 1.000;
+  const SCALE_TO   = 1.035;
+  const freezeAt   = hit - 1.40;         // 之后冻结
+  const pushEnd    = Math.max(t0 + 0.35, freezeAt);
+
+  return {
+    el: sc,
+    update: (time) => {
+      inner(time);
+      // 线性推镜，到 freezeAt 停住
+      const k = CL((time - t0) / Math.max(0.01, pushEnd - t0));
+      const sc_ = SCALE_FROM + (SCALE_TO - SCALE_FROM) * k;
+      // 用 transform 会覆盖场景自己的 transform，改用独立的 zoom 层
+      if (sc.__zoom) {
+        sc.__zoom.style.transform = `scale(${sc_})`;
+      }
+    },
+  };
 }
 
 // ══════════════════════════════════════════════════════════
