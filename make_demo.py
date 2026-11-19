@@ -301,7 +301,11 @@ def main():
                   timeout=900, label="kazi_check.py")
     (DEMO / "check.txt").write_text(out, encoding="utf-8")
 
-    # ── 10. 清理 ──
+    # ── 10. 同步 README 数字（P3-1）──
+    # README 里的数字是手写的就会漂。从 check.txt 单向生成。
+    run([sys.executable, str(ROOT/"tools/sync_readme.py")], label="sync_readme.py")
+
+    # ── 11. 清理 ──
     if not a.keep:
         shutil.rmtree(DEMO / "frames", ignore_errors=True)
         shutil.rmtree(DEMO / "batch", ignore_errors=True)

@@ -20,13 +20,15 @@ script  →  voice  →  word-level alignment  →  visuals  →  mix  →  fina
 
 Measured output:
 
+<!-- AUTO:metrics:start -->
 | Metric | Value |
 |---|---|
-| **Kayzi rate** (visual action synced to keyword) | **15/15 = 100%** |
-| Loudness | -14 LUFS |
-| True peak | ≤ -1 dBTP |
+| **Kayzi rate** (visual action synced to keyword) | **3/3 = 100%** |
+| Loudness | -13.9 LUFS |
+| True peak | -6.6 dBTP |
 | Resolutions | 1080×1920 / 1920×1080 / 1440×1080 / 1080×1080 |
 | Frame rate | 60fps |
+<!-- AUTO:metrics:end -->
 
 **What "kayzi" means**: when the voice reaches a keyword, the picture completes its
 corresponding action on that exact frame. Not before, not after.
