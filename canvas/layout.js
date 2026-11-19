@@ -303,8 +303,10 @@ function make(ratioKey) {
       }
     } else {
       // 纵向 n 行
+      // bot 从 80% 收到 74%：长条目两行会撑出 slot 高度，
+      // 80% + 一行溢出就压到字幕（字幕在 88%）
       const top = px(18, 'h');
-      const bot = px(80, 'h');
+      const bot = px(74, 'h');
       const usable = bot - top;
       const gap = pad('gap') * (n - 1);
       const each = (usable - gap) / n;
@@ -396,6 +398,29 @@ function make(ratioKey) {
   };
 
   /**
+   * 多条目统一字号 —— 取「最长的那一条」来定，全组一致
+   *
+   * 为什么不能每条独立缩：
+   *   三个要点，第一个 4 个字、第二个 12 个字，独立缩会让第二个的字号
+   *   明显小于第一个，看起来像排版事故而不是层级。
+   *   同一组内的字号必须一致。
+   *
+   * @param texts    字符串数组
+   * @param maxW     可用宽度
+   * @param key      字号档
+   * @param maxLines 每条最多几行
+   * @returns        全组共用的字号
+   */
+  const fitGroup = (texts, maxW, key = 'h2', maxLines = 1) => {
+    const arr = (Array.isArray(texts) ? texts : [texts])
+      .map(x => String(x == null ? '' : x))
+      .filter(Boolean);
+    if (!arr.length) return font(key);
+    const longest = arr.reduce((a, b) => (b.length > a.length ? b : a));
+    return fitFont(longest, maxW, key, maxLines);
+  };
+
+  /**
    * 用真实测量算字号，使 text 在 maxW 内排 maxLines 行
    *
    * 改动：原来靠「汉字=1em 英文=0.55em」估算，现在用 measureText + 二分。
@@ -438,7 +463,7 @@ function make(ratioKey) {
     W, H, isLandscape,
     font, pad, px, area, rows, cols, contentW, slots, heroSplit, fitFont,
     measureText, FONT_STACK, FONT_SERIF, FONT_SANS, stackFor, G, baseline, snapY, snap4,
-    contentX, space, SP,
+    contentX, space, SP, fitGroup,
     // 便捷：返回 CSS 字符串
     css: {
       font: (key, weight = 700) => `font:${weight} ${font(key)}px/1.2 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif`,

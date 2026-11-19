@@ -222,42 +222,84 @@ BUILDER.points = ({ sc, L, data, hit, fg, sub, fs }) => {
   const items = data.items || [];
   const n = items.length;
   const O = L.pad('outer');
-  // 横屏：N 栏；竖屏：N 行
-  // 竖屏用 10 栏宽、横屏用满宽
-  const sl = L.slots(n).map(s => L.isLandscape ? s : Object.assign({}, s, { w: L.G.col(0, 10).w }));
+  const land = L.isLandscape;
+
+  // ═══════════════════════════════════════════════════════════
+  // 布局：flex 纵向 + space-between，不用绝对定位
+  //
+  // 之前用绝对 y 坐标手工分配，问题是：
+  //   ① 内容总高超过容量时，缩字号后又出现气泡压文字（负间距）
+  //   ② 条目高度不等时，均分间隔会让整体重心偏移
+  // 交给 flex 的 space-between，浏览器负责分配剩余空间，
+  // 内容超高时自然收紧，不会出现负间距。
+  // ═══════════════════════════════════════════════════════════
+  const colW = land ? 0 : L.G.col(0, 10).w;
+  const boxW = land ? (L.W - O*2 - L.SP.md*(n-1)) / n : colW - L.font('h1')*0.92 - L.SP.md;
+
+  // 统一字号 + 容量校验（放不下继续缩）
+  const zoneTop = L.px(17, 'h');
+  const zoneBot = L.px(74, 'h');
+  const capacity = zoneBot - zoneTop;
+  const gapY = Math.round(L.SP.sm * 0.75);
+
+  const descSize = L.font('label');
+  // 气泡是固定视觉元素，不跟随字号缩小（缩了会显得局促）
+  const bubbleOf = (size) => Math.round(L.font('h1') * 0.72);
+  const measureAll = (size) => {
+    const bh = bubbleOf(size);
+    const hs = items.map(it => {
+      const tW = L.measureText(String(it.title || it), size, 600, `'KaziSerif',serif`);
+      const tLines = Math.max(1, Math.ceil(tW / boxW));
+      return bh + gapY + Math.round(size * 1.35 * tLines) + (it.desc ? Math.round(descSize * 1.5) : 0);
+    });
+    return { total: hs.reduce((a, b) => a + b, 0) };
+  };
+
+  let ptSize = L.fitGroup(items.map(x => x.title || x), boxW, 'h2', 2);
+  const minSize = Math.round(L.font('h2') * 0.55);
+  for (let k = 0; k < 12 && measureAll(ptSize).total > capacity && ptSize > minSize; k++) {
+    ptSize = Math.max(minSize, Math.round(ptSize * 0.90));
+  }
+  const bubbleH = bubbleOf(ptSize);
+
   const html = items.map((it, i) => {
-    const r = sl[i];
-    // ⭐ 左对齐：气泡和文字都从容器左边缘开始（align-items:flex-start）
-    //    竖屏时把整块推到栏线，横屏时每栏各占一段
-    const gapY = L.SP.sm;
-    return `<div class="pt" data-i="${i}" style="position:absolute;
-      left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;
-      display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-      gap:${gapY}px;opacity:0">
-      <div style="width:${Math.round(L.font('h1')*0.92)}px;height:${Math.round(L.font('h1')*0.92)}px;
+    const w = land ? Math.round(boxW) : colW;
+    return `<div class="pt" data-i="${i}" style="
+      width:${w}px;display:flex;flex-direction:column;align-items:flex-start;
+      opacity:0;${land ? 'flex:0 0 auto' : ''}">
+      <div style="width:${bubbleH}px;height:${bubbleH}px;margin-bottom:${gapY}px;
         border-radius:50%;background:transparent;border:2px solid ${fg};color:${fg};display:flex;
-        align-items:center;justify-content:center;${fs('h2',700)};flex:none;
-        margin-bottom:${Math.round(L.SP.sm*0.55)}px">${i+1}</div>
-      <div style="width:100%;color:${fg};font-family:${FF_SERIF};font-size:${Math.round(L.font('h2')*1.05)}px;font-weight:600;line-height:1.35;text-align:left">${it.title || it}</div>
+        align-items:center;justify-content:center;font:700 ${Math.round(bubbleH*0.46)}px/1 ${FF};flex:none">${i+1}</div>
+      <div style="width:100%;color:${fg};font-family:${FF_SERIF};font-size:${ptSize}px;font-weight:600;line-height:1.35;text-align:left">${it.title || it}</div>
       ${it.desc ? `<div style="width:100%;color:${sub};${fs('label',500,1.5)};text-align:left">${it.desc}</div>` : ''}
     </div>`;
   }).join('');
-  sc.innerHTML = html;
+
+  // 外层容器：竖屏纵向 space-between，横屏横向 space-between
+  sc.innerHTML = `<div id="ptwrap" style="position:absolute;
+    left:${land ? O : L.G.col(0,10).x}px;
+    top:${zoneTop}px;
+    width:${land ? L.W - O*2 : colW}px;
+    height:${capacity}px;
+    display:flex;flex-direction:${land ? 'row' : 'column'};
+    align-items:${land ? 'flex-start' : 'stretch'};
+    justify-content:space-between;
+    gap:${land ? L.SP.md : 0}px">${html}</div>`;
 
   const els = [...sc.querySelectorAll('.pt')];
   return (time) => {
     els.forEach((e, i) => {
       const isKw = (i === n - 1);
-      // 非关键词项：在 hit-2.0s 前依次出现完（不污染 before）
-      // 关键词项：在 hit 时刻从下方升起 40% 行高（大位移）
       const st = isKw ? hit - 0.40 : (hit - 2.00 + i * 0.13);
       const k = CL((time - st) / (isKw ? 0.58 : 0.18));
       e.style.opacity = isKw ? CL((time - (hit - 0.40)) / 0.24) : k;
-      const dist = isKw ? sl[i].h * 1.4 : 24;
+      // 位移按可用高度算，不是气泡大小（气泡固定后位移会太小，实测倍数 25.7→15.0）
+      const dist = isKw ? Math.round((zoneBot - zoneTop) * 0.45) : 24;
       e.style.transform = `translateY(${LP(dist, 0, isKw ? E.standard(k) : E.smooth(k))}px)`;
     });
   };
 };
+
 
 // ─── 3. steps 步骤流程 ───
 BUILDER.steps = ({ sc, L, data, hit, fg, sub, fs }) => {
@@ -272,6 +314,10 @@ BUILDER.steps = ({ sc, L, data, hit, fg, sub, fs }) => {
     ? (L.W - O*2 - gap*(n-1)) / n
     : (bot - top - gap*(n-1)) / n;
 
+  // 全组统一字号（P0-2）：取最长那条
+  const stSize = L.fitGroup(items.map(x => x.title || x),
+    (land ? each : L.W - O*2) - L.font('h1')*0.95 - L.SP.md, 'h2', 2);
+
   const html = items.map((it, i) => {
     const x = land ? Math.round(O + i*(each+gap)) : O;
     const y = land ? top : Math.round(top + i*(each+gap));
@@ -284,7 +330,7 @@ BUILDER.steps = ({ sc, L, data, hit, fg, sub, fs }) => {
       <div style="width:${Math.round(L.font('h1')*0.95)}px;height:${Math.round(L.font('h1')*0.95)}px;
         border-radius:${Math.round(L.font('h1')*0.2)}px;background:transparent;border:2px solid ${fg};color:${fg};
         display:flex;align-items:center;justify-content:center;${fs('h2',700)};flex:none">${i+1}</div>
-      <div style="color:${fg};font-family:${FF_SERIF};font-size:${Math.round(L.font('h2')*1.05)}px;font-weight:600;line-height:1.3;text-align:left">${it.title||it}</div>
+      <div style="color:${fg};font-family:${FF_SERIF};font-size:${stSize}px;font-weight:600;line-height:1.3;text-align:left">${it.title||it}</div>
     </div>`;
   }).join('');
   sc.innerHTML = html;
@@ -324,6 +370,10 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
     rx = O; ry = Math.round(top + eh + gap); rw = Math.round(L.W - O*2); rh = Math.round(eh);
   }
 
+    // 两侧标题取更长的那个定字号（P0-2）
+  const cmpSize = L.fitGroup([left.title, right.title],
+    (land ? (L.W - O*2 - gap)/2 : L.W - O*2) * 0.88, 'h2', 2);
+
   sc.innerHTML = `
     ${title ? `<div style="position:absolute;left:${O}px;top:${L.px(15,'h')}px;
       width:${L.W-O*2}px;color:${fg};${fs('label',700,1.2)};text-align:left;
@@ -334,7 +384,7 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
       gap:${L.SP.sm}px;opacity:.30;box-sizing:border-box;padding:0 6%;overflow:hidden">
       <div class="ht"></div>
-      <div style="color:#fff;${fs('h2',700,1.25)};text-align:left;font-family:${FF_SERIF};font-weight:600">${left.title||''}</div>
+      <div style="color:#fff;font:600 ${cmpSize}px/1.25 ${FF_SERIF};text-align:left">${left.title||''}</div>
       ${left.desc ? `<div style="color:rgba(255,255,255,.8);${fs('label',500,1.4)};text-align:left">${left.desc}</div>` : ''}
     </div>
     <div id="cmpR" style="position:absolute;left:${rx}px;top:${ry}px;width:${rw}px;height:${rh}px;
@@ -342,9 +392,10 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
       gap:${L.SP.sm}px;opacity:.30;box-sizing:border-box;padding:0 6%;overflow:hidden">
       <div class="ht"></div>
-      <div style="color:#fff;${fs('h2',700,1.25)};text-align:left;font-family:${FF_SERIF};font-weight:600">${right.title||''}</div>
+      <div style="color:#fff;font:600 ${cmpSize}px/1.25 ${FF_SERIF};text-align:left">${right.title||''}</div>
       ${right.desc ? `<div style="color:rgba(255,255,255,.85);${fs('label',500,1.4)};text-align:left">${right.desc}</div>` : ''}
     </div>`;
+
 
   const el = sc.querySelector('#cmpL'), er = sc.querySelector('#cmpR');
   return (time) => {
@@ -524,13 +575,17 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
     x2=O; y2=Math.round(top+eh+gap); w2=Math.round(L.W-O*2); h2=Math.round(eh);
   }
 
+    // 两个块标题取更长的定字号（P0-2）
+  const baSize = L.fitGroup([before.title, after.title],
+    (land ? w1 : L.W - O*2) - Math.round(O*1.1), 'h1', 2);
+
   sc.innerHTML = `
     <div style="position:absolute;left:${x1}px;top:${y1}px;width:${w1}px;height:${h1}px;
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
       gap:${L.SP.sm}px;box-sizing:border-box;padding:0 ${Math.round(O*0.55)}px">
       <div style="color:${sub};${fs('label',600,1.2)};letter-spacing:.12em">${label1}</div>
       <div id="ba1" style="color:${sub};
-        font:600 ${before.size || L.font('h1')}px/1.20 ${FF_SERIF};
+        font:600 ${before.size || baSize}px/1.20 ${FF_SERIF};
         text-align:left;opacity:.55;letter-spacing:-.01em">${before.title||''}</div>
       ${before.desc?`<div style="color:${sub};${fs('label',500,1.4)};opacity:.7">${before.desc}</div>`:''}
     </div>
@@ -539,7 +594,7 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
       gap:${L.SP.sm}px;box-sizing:border-box;padding:0 ${Math.round(O*0.55)}px">
       <div style="color:${C.warm};${fs('label',600,1.2)};letter-spacing:.12em">${label2}</div>
       <div id="ba2" style="color:${fg};
-        font:600 ${after.size || L.font('h1')}px/1.20 ${FF_SERIF};
+        font:600 ${after.size || baSize}px/1.20 ${FF_SERIF};
         text-align:left;opacity:0">${after.title||''}</div>
       ${after.desc?`<div id="ba2d" style="color:${sub};${fs('label',500,1.4)};opacity:0">${after.desc}</div>`:''}
     </div>`;
@@ -567,6 +622,10 @@ BUILDER.list = ({ sc, L, data, hit, fg, sub, fs }) => {
   const gap = L.SP.sm;
   const each = (bot - top - gap*(n-1)) / n;
 
+  // 全组统一字号（P0-2）
+  const liSize = L.fitGroup(items.map(x => x.title || x),
+    L.W - O*2 - L.font('label')*1.1 - L.SP.md, 'body', 2);
+
   sc.innerHTML = items.map((it, i) => {
     const y = Math.round(top + i*(each+gap));
     return `<div class="li" data-i="${i}" style="position:absolute;
@@ -575,7 +634,7 @@ BUILDER.list = ({ sc, L, data, hit, fg, sub, fs }) => {
       <div style="width:${Math.round(L.font('label')*1.1)}px;height:${Math.round(L.font('label')*1.1)}px;
         border-radius:50%;border:3px solid ${C.sage};display:flex;align-items:center;
         justify-content:center;color:${C.sage};${fs('label',700)};flex:none">✓</div>
-      <div style="color:${fg};${fs('body',500,1.35)}">${it.title||it}</div>
+      <div style="color:${fg};font:500 ${liSize}px/1.35 ${FF_SANS}">${it.title||it}</div>
     </div>`;
   }).join('');
 
