@@ -27,10 +27,33 @@ html,body{margin:0;padding:0;overflow:hidden;
 #stage.dark{background:#1F3B4D}
 #stage.red{background:#A8231A}
 
-#grain{position:absolute;inset:0;width:100%;height:100%;opacity:.05;
-  mix-blend-mode:multiply;pointer-events:none;z-index:2}
-#vign{position:absolute;inset:0;pointer-events:none;z-index:3;
-  background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(26,28,31,.07) 100%)}
+/* ═══ 材质三层 ═══
+   ① 纸纤维：预生成 PNG 平铺，低频大尺度，multiply
+      不用 feTurbulence —— 每帧重算会拖慢渲染（实测风险）
+   ② 半调网点：只出现在强调块上，见 scenes.js 的 .ht 类
+   ③ 墨迹：文字用 0.5px 同色描边模拟印刷压墨，见 #scenes 的 text-shadow
+*/
+#grain{position:absolute;inset:0;width:100%;height:100%;
+  background-image:url('textures/paper.png');
+  background-size:1024px 1024px;background-repeat:repeat;
+  opacity:.055;pointer-events:none;z-index:2;
+  /* 不用 mix-blend-mode: 全屏 multiply 每帧强制合成层重算，
+     实测 7622 帧从 802s 涨到 1203s（+50%）。
+     改成普通透明度叠加，纹理本身已经是浅灰，视觉等价。 */}
+
+/* 暗角：从「四周都暗」改成「下方轻微压暗」，模拟纸张受光 */
+#vign{position:absolute;left:0;right:0;bottom:0;height:22%;
+  pointer-events:none;z-index:3;
+  background:linear-gradient(to bottom, transparent, rgba(26,28,31,.045))}
+
+/* 半调网点：强调块上用，小尺度 */
+.ht{position:absolute;inset:0;pointer-events:none;
+  background-image:url('textures/halftone.png');
+  background-size:5px 5px;background-repeat:repeat;
+  opacity:.075;border-radius:inherit}
+
+/* 墨迹：文字不做投影，用 0.5px 同色描边模拟压墨 */
+#scenes{text-shadow:0 0 0.5px currentColor}
 #themeWash{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;
   will-change:transform,opacity}
 /* 转场墨线：1px，领先于新页推进 */
@@ -111,17 +134,9 @@ let KIT = null;    // timeline
 let SCENES = [];   // 场景元数据
 let DEF = [];      // 场景定义
 
-// ─── 纸纹 ───
-(function grain(){
-  const c = el('grain'), g = c.getContext('2d');
-  const img = g.createImageData(270, 480);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const v = 128 + (Math.random() - .5) * 90;
-    img.data[i] = img.data[i+1] = img.data[i+2] = v;
-    img.data[i+3] = 255;
-  }
-  g.putImageData(img, 0, 0);
-})();
+// ─── 材质：由 CSS 预生成纹理承担，JS 不再逐像素生成 ───
+// 原来这里是 270×480 的 createImageData 随机噪点，单一尺度、opacity .05
+// 现在换成 canvas/textures/paper.png 平铺 + CSS 多层混合
 
 // ─── 每个场景该显示哪一句的字幕 ——
 // 用 scene 覆盖的句子范围，不依赖 cap 的切分
@@ -430,10 +445,6 @@ window.initScene = function () {
   el('prog').style.right = O + 'px';
   el('prog').style.bottom = Math.round(O * 0.8) + 'px';
   el('prog').style.height = Math.max(2, Math.round(L.H / 640)) + 'px';
-
-  // 纸纹尺寸
-  el('grain').width = Math.round(L.W / 4);
-  el('grain').height = Math.round(L.H / 4);
 
   buildScenes();
 

@@ -293,14 +293,16 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
     <div id="cmpL" style="position:absolute;left:${lx}px;top:${ly}px;width:${lw}px;height:${lh}px;
       border-radius:${Math.round(L.font('body')*0.28)}px;background:${left.color||C.soft};
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-      gap:${Math.round(L.pad('gap')*0.5)}px;opacity:.30;box-sizing:border-box;padding:0 6%">
+      gap:${Math.round(L.pad('gap')*0.5)}px;opacity:.30;box-sizing:border-box;padding:0 6%;overflow:hidden">
+      <div class="ht"></div>
       <div style="color:#fff;${fs('h2',700,1.25)};text-align:left;font-family:${FF_SERIF};font-weight:600">${left.title||''}</div>
       ${left.desc ? `<div style="color:rgba(255,255,255,.8);${fs('label',500,1.4)};text-align:left">${left.desc}</div>` : ''}
     </div>
     <div id="cmpR" style="position:absolute;left:${rx}px;top:${ry}px;width:${rw}px;height:${rh}px;
       border-radius:${Math.round(L.font('body')*0.28)}px;background:${right.color||C.warm};
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-      gap:${Math.round(L.pad('gap')*0.5)}px;opacity:.30;box-sizing:border-box;padding:0 6%">
+      gap:${Math.round(L.pad('gap')*0.5)}px;opacity:.30;box-sizing:border-box;padding:0 6%;overflow:hidden">
+      <div class="ht"></div>
       <div style="color:#fff;${fs('h2',700,1.25)};text-align:left;font-family:${FF_SERIF};font-weight:600">${right.title||''}</div>
       ${right.desc ? `<div style="color:rgba(255,255,255,.85);${fs('label',500,1.4)};text-align:left">${right.desc}</div>` : ''}
     </div>`;
@@ -617,7 +619,7 @@ BUILDER.cta = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
         ${fs('h2',500,1.4)};opacity:0">${subline}</div>` : ''}
       ${action ? `<div id="ca" style="margin-top:${Math.round(L.pad('gap')*1.4)}px;
         display:inline-block;padding:${Math.round(L.font('body')*0.5)}px ${Math.round(L.font('body')*1.2)}px;
-        border-radius:${Math.round(L.font('body')*0.6)}px;background:${C.warm};color:#fff;
+        border-radius:${Math.round(L.font('body')*0.6)}px;background:${C.warm};color:#fff;position:relative;overflow:hidden;
         ${fs('h2',700,1.2)};opacity:0">${action}</div>` : ''}
     </div>`;
   const m = sc.querySelector('#cm'), s = sc.querySelector('#cs'), a = sc.querySelector('#ca');
