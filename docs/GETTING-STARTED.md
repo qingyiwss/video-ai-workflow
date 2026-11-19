@@ -76,9 +76,9 @@ vendor/audiocpp/audiocpp_cli.exe
 ### ② CosyVoice3 模型（2.1 GB）
 
 ```bash
-# 手动下载
-# https://huggingface.co/cstr/cosyvoice3-0.5b-2512-GGUF
-# 保存为 models/cosyvoice3-q8_0.gguf
+＃ 手动下载
+＃ https://huggingface.co/cstr/cosyvoice3-0.5b-2512-GGUF
+＃ 保存为 models/cosyvoice3-q8_0.gguf
 ```
 
 或设置环境变量指向已有文件：
@@ -243,10 +243,10 @@ python ../tools/lint_script.py script.md
 ## 3.4 配音
 
 ```bash
-# 自动选后端
+＃ 自动选后端
 python ../tools/gen_voice.py .
 
-# 或指定
+＃ 或指定
 python ../tools/gen_voice.py . --backend edge-tts --voice zh-CN-YunxiNeural
 ```
 
@@ -267,7 +267,7 @@ report.txt         配音报告
 **TTS 每句开头结尾自带静音长短不一，句内逗号也有的一口气念过去、有的拖很久。**
 
 ```bash
-# 建适配目录（工具要求固定格式）
+＃ 建适配目录（工具要求固定格式）
 python ../tools/prep_pace.py .
 
 python ../tools/pace.py pace-in pace-out --report pace.tsv
@@ -327,29 +327,29 @@ python ../tools/gate1.py .
 ```json
 [
   {
-    "sid": "01",
-    "kind": "hero",
-    "theme": "paper",
-    "first": "01_01",
-    "last": "01_02",
-    "data": {
-      "title": "卡字",
-      "kicker": "先说个词",
-      "note": "画面动的那一下，正好跟字对上"
-    },
-    "chap": {"num": "01", "cn": "开场", "en": "WHAT"}
+"sid": "01",
+"kind": "hero",
+"theme": "paper",
+"first": "01_01",
+"last": "01_02",
+"data": {
+  "title": "卡字",
+  "kicker": "先说个词",
+  "note": "画面动的那一下，正好跟字对上"
+},
+"chap": {"num": "01", "cn": "开场", "en": "WHAT"}
   },
   {
-    "sid": "02",
-    "kind": "compare",
-    "theme": "dark",
-    "first": "02_03",
-    "last": "02_04",
-    "data": {
-      "title": "为什么是 45 毫秒",
-      "left": {"title": "看见", "desc": "125 ms", "color": "#7A8971"},
-      "right": {"title": "听见", "desc": "45 ms", "color": "#C99B3F"}
-    }
+"sid": "02",
+"kind": "compare",
+"theme": "dark",
+"first": "02_03",
+"last": "02_04",
+"data": {
+  "title": "为什么是 45 毫秒",
+  "left": {"title": "看见", "desc": "125 ms", "color": "#7A8971"},
+  "right": {"title": "听见", "desc": "45 ms", "color": "#C99B3F"}
+}
   }
 ]
 ```
@@ -382,10 +382,10 @@ python ../tools/gate1.py .
 ### 渲染
 
 ```bash
-# 全片
+＃ 全片
 node ../canvas/render.cjs . 9:16
 
-# 只渲一段（先验证）
+＃ 只渲一段（先验证）
 node ../canvas/render.cjs . 9:16 still 12.5 out.png
 ```
 
@@ -412,19 +412,19 @@ python ../tools/mix.py . --bgm bgm.wav --out mix.wav
 **然后归一化（关键）：**
 
 ```bash
-# ① 压缩
+＃ ① 压缩
 ffmpeg -y -i mix.wav -af \
   "acompressor=threshold=-24dB:ratio=4:attack=5:release=150:makeup=14" \
   -ar 48000 _c.wav
 
-# ② 限幅
+＃ ② 限幅
 ffmpeg -y -i _c.wav -af "alimiter=limit=0.87:attack=2:release=30:level=0" \
   -ar 48000 _l.wav
 
-# ③ 精确增益（目标 -14 LUFS，峰值不超 -1.2）
+＃ ③ 精确增益（目标 -14 LUFS，峰值不超 -1.2）
 ffmpeg -i _l.wav -af loudnorm=print_format=json -f null -
-# 看输出里的 input_i 和 input_tp，算：
-#   gain = min(-14.0 - input_i, -1.2 - input_tp)
+＃ 看输出里的 input_i 和 input_tp，算：
+＃   gain = min(-14.0 - input_i, -1.2 - input_tp)
 ffmpeg -y -i _l.wav -af "volume=+X.XdB" -ar 48000 mix-final.wav
 ```
 

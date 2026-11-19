@@ -134,17 +134,30 @@ This content is free to use in personal, educational and commercial projects.
 
 ## 10. 字体
 
-本项目 CSS 里引用的字体：
+本项目**内置**三份 woff2 子集，位于 `canvas/fonts/`，不依赖系统字体。
 
-| 字体 | 说明 |
-|---|---|
-| PingFang SC | macOS 系统字体，不随项目分发 |
-| Microsoft YaHei（微软雅黑） | Windows 系统字体，不随项目分发 |
-| Noto Sans CJK SC | Linux 常见开源字体（SIL OFL 1.1） |
-| sans-serif | 浏览器兜底 |
+| 文件 | 字重 | 用途 | 体积 |
+|---|---|---|---|
+| `NotoSerifSC-SemiBold.woff2` | 600 | 巨字 / 标题 / 引文 / 数字 | 0.68 MB |
+| `NotoSansSC-Regular.woff2` | 400 | 正文 / 字幕 | 0.52 MB |
+| `NotoSansSC-Medium.woff2` | 500 | 小标题 | 0.52 MB |
+| | | **合计** | **1.72 MB** |
 
-**字体不随本项目分发**，使用用户系统已安装的字体。如果系统没有
-PingFang / 雅黑，会自动回退到 Noto 或 sans-serif，视觉效果会有差异。
+**授权**：SIL Open Font License 1.1（OFL-1.1），允许嵌入、子集化、再分发。
+
+- Noto Serif SC：https://fonts.google.com/noto/specimen/Noto+Serif+SC
+- Noto Sans SC：https://fonts.google.com/noto/specimen/Noto+Sans+SC
+- 源字体：`C:\Windows\Fonts\NotoSerifSC-VF.ttf` / `NotoSansSC-VF.ttf`（可变字体）
+
+**子集范围**：GB2312 一级汉字（3755 个）+ 项目实际用字 + ASCII + 中文标点，
+共 3953 字符。字重通过 `fontTools.varLib.instancer` 从可变字体实例化后固定。
+
+**为什么内置而不是用系统字体**：
+`fitFont` 用 `canvas.measureText` 真实测宽来算字号。同一串文字在
+PingFang SC / Microsoft YaHei / Noto 下宽度差 5-7.6%（实测 136px 时差 105px），
+用系统字体就无法保证跨平台不溢出。内置字体让测量和渲染永远是同一个字体。
+
+**不再依赖**：PingFang SC、Microsoft YaHei、Noto Sans CJK SC 等系统字体。
 
 ---
 

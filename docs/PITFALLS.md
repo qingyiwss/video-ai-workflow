@@ -94,7 +94,7 @@ say = "".join(w["u"] for w in L["words"])   # ✗
 
 **原因**：
 ```python
-# 原稿 `*定了个算法*，` 中间是 `*，`，首字符是星号
+＃ 原稿 `*定了个算法*，` 中间是 `*，`，首字符是星号
 p = between[:1]     # ✗ 拿到的是 `*`
 ```
 
@@ -119,7 +119,7 @@ p = next((ch for ch in between if ch in RULE), None)   # ✓
 │   ├── L0001.wav
 │   └── L0001.json       {"say": "念法", "dur": 3.2}
 └── align/
-    └── <sha1前16位>.json
+└── <sha1前16位>.json
 ```
 
 **修法**：先建适配目录。
@@ -127,9 +127,9 @@ p = next((ch for ch in between if ch in RULE), None)   # ✓
 SRC = BASE/"pace-in"
 (SRC/"lines").mkdir(parents=True, exist_ok=True)
 for i, L in enumerate(sel, 1):
-    shutil.copy2(BASE/"lines"/f"{L['tag']}.wav", SRC/"lines"/f"L{i:04d}.wav")
-    (SRC/"lines"/f"L{i:04d}.json").write_text(
-        json.dumps({"say": L["text"].replace("*",""), "dur": L["dur"]}))
+shutil.copy2(BASE/"lines"/f"{L['tag']}.wav", SRC/"lines"/f"L{i:04d}.wav")
+(SRC/"lines"/f"L{i:04d}.json").write_text(
+json.dumps({"say": L["text"].replace("*",""), "dur": L["dur"]}))
 ```
 
 **实测效果**：39 句里 36 句有剪短，省 4.8 秒。
@@ -148,7 +148,7 @@ for i, L in enumerate(sel, 1):
 
 ```python
 THR_IN = -36.0
-# 把 < 8 帧（80ms）的有声段改回静音
+＃ 把 < 8 帧（80ms）的有声段改回静音
 ```
 
 ---
@@ -178,8 +178,8 @@ MAX_INNER = 0.25   # 没有标点的位置，允许的最大停顿
 ```python
 c0_ = max(cs2, min(c0_, ce2 - cut))          # ① 落在静音段内
 if (db[i_a:i_b] > THR_IN).sum() > 2:          # ② 这段真的没响声
-    c0_ = 最安静的位置 - 一半
-# ③ 接口处做 8ms 淡入淡出，避免咔哒声
+c0_ = 最安静的位置 - 一半
+＃ ③ 接口处做 8ms 淡入淡出，避免咔哒声
 ```
 
 ---
@@ -193,10 +193,10 @@ if (db[i_a:i_b] > THR_IN).sum() > 2:          # ② 这段真的没响声
 **修法**：把超出的部分钳回句尾。
 ```python
 if times:
-    last_te = max(te for _, te in times)
-    if last_te > (abs_end - abs_start) + 0.005:
-        times = [(min(ts, abs_end - abs_start - 0.01),
-                  min(te, abs_end - abs_start)) for ts, te in times]
+last_te = max(te for _, te in times)
+if last_te > (abs_end - abs_start) + 0.005:
+times = [(min(ts, abs_end - abs_start - 0.01),
+  min(te, abs_end - abs_start)) for ts, te in times]
 ```
 
 ---
@@ -320,16 +320,16 @@ radial-gradient(circle at 50% 46%, 新色 0%, 新色 ${k*150}%, transparent ${k*
 **原因**：
 ```python
 inFrom = min(kwT - 2.0, from - 0.15)
-# 段 03 关键词离段首只有 0.79 秒
-# → inFrom 被推到 19.94，而段 02 到 20.77 才结束
-# → 重叠 0.83 秒，两个主题同时可见
+＃ 段 03 关键词离段首只有 0.79 秒
+＃ → inFrom 被推到 19.94，而段 02 到 20.77 才结束
+＃ → 重叠 0.83 秒，两个主题同时可见
 ```
 
 **修法**：`inFrom` 不早于「上一段 outTo - 0.45」。
 
 ```python
 if i > 0:
-    inFrom = max(inFrom, S[i-1].to + 0.22 - 0.45)
+inFrom = max(inFrom, S[i-1].to + 0.22 - 0.45)
 ```
 
 **0.45 秒的理由**：淡入 0.30 + 余量 0.15。超过 0.5 秒两个主题打架。
@@ -451,10 +451,14 @@ l.style.width = (E.standard(lp) * m.w) + 'px';
 **修法**：显式写字体族，而且**用单引号**。
 
 ```css
-font: 700 300px/1.05 'PingFang SC','Microsoft YaHei',sans-serif;   /* ✓ */
-font: 700 300px/1.05 "PingFang SC",sans-serif;                     /* ✗ */
-font: 700 300px/1.05 inherit;                                       /* ✗ */
+font: 600 300px/1.05 'KaziSerif',serif;     /* ✓ 内置宋体，单引号 */
+font: 600 300px/1.05 "KaziSerif",serif;     /* ✗ 双引号截断 style 属性 */
+font: 700 300px/1.05 inherit;               /* ✗ inherit 不能作字体族 */
 ```
+
+**2026-11 起不再依赖系统字体**：`canvas/fonts/` 内置三份 woff2，
+`KaziSerif`（思源宋体 600）和 `KaziSans`（思源黑体 400/500）。
+见 NOTICE.md 第 10 节。
 
 **验证方法**：必须用 `getComputedStyle` 查一次，不能靠眼看。
 
@@ -468,14 +472,14 @@ font: 700 300px/1.05 inherit;                                       /* ✗ */
 
 ```html
 <!-- 双引号提前闭合 style，整条 font 失效 -->
-<div style="font:700 260px/1.08 "PingFang SC",sans-serif">
-<!-- 浏览器解析成：style="font:700 260px/1.08 " 然后 pingfang=... -->
+<div style="font:600 260px/1.08 "KaziSerif",serif">
+<!-- 浏览器解析成：style="font:600 260px/1.08 " 然后 kaziserif=... -->
 ```
 
 **修法**：**内联 style 里的字体族必须用单引号。**
 
 ```html
-<div style="font:700 260px/1.08 'PingFang SC',sans-serif">   <!-- ✓ -->
+<div style="font:600 260px/1.08 'KaziSerif',serif">   <!-- ✓ -->
 ```
 
 **这个坑本项目踩了 3 次。**
@@ -510,17 +514,17 @@ font: 700 300px/1.05 inherit;                                       /* ✗ */
 
 **正确参数**：
 ```bash
-# ① 压缩：阈值 -24 / 比例 4 / makeup 14
+＃ ① 压缩：阈值 -24 / 比例 4 / makeup 14
 ffmpeg -y -i narration.wav -af \
   "acompressor=threshold=-24dB:ratio=4:attack=5:release=150:makeup=14" \
   -ar 48000 _c.wav
 
-# ② 硬限幅：0.87 = -1.2 dBFS
+＃ ② 硬限幅：0.87 = -1.2 dBFS
 ffmpeg -y -i _c.wav -af \
   "alimiter=limit=0.87:attack=2:release=30:level=0" \
   -ar 48000 _l.wav
 
-# ③ 精确增益：gain = min(-14.0 - 当前LUFS, -1.2 - 当前dBTP)
+＃ ③ 精确增益：gain = min(-14.0 - 当前LUFS, -1.2 - 当前dBTP)
 ffmpeg -y -i _l.wav -af "volume=+X.XdB" -ar 48000 mix-final.wav
 ```
 
@@ -545,15 +549,15 @@ ffmpeg -y -i _l.wav -af "volume=+X.XdB" -ar 48000 mix-final.wav
 
 ```python
 def normalize_rms(x, target_db=-23.0):
-    rms = float(np.sqrt(np.mean(x ** 2)))
-    cur_db = 20 * np.log10(rms)
-    gain = 10 ** ((target_db - cur_db) / 20)
-    y = x * gain
-    LIMIT = 10 ** (-3.0 / 20)      # ⚠️ -3 dBFS，不是 -1.5
-    pk = float(np.abs(y).max())
-    if pk > LIMIT:
-        y = y * (LIMIT / pk)
-    return y
+rms = float(np.sqrt(np.mean(x ** 2)))
+cur_db = 20 * np.log10(rms)
+gain = 10 ** ((target_db - cur_db) / 20)
+y = x * gain
+LIMIT = 10 ** (-3.0 / 20)      # ⚠️ -3 dBFS，不是 -1.5
+pk = float(np.abs(y).max())
+if pk > LIMIT:
+y = y * (LIMIT / pk)
+return y
 ```
 
 **实测效果：句间差 12 dB → 2.3 dB。**
@@ -573,7 +577,7 @@ def normalize_rms(x, target_db=-23.0):
 ```python
 final_audio = DEMO / "mix-final.wav"
 if final_audio.exists():
-    final_audio.unlink()      # 必须删
+final_audio.unlink()      # 必须删
 ```
 
 ---
@@ -728,7 +732,7 @@ cmd /c "rd /s /q `"$path`""
 **原因**：
 
 ```python
-# kazi_check.py
+＃ kazi_check.py
 before = mean_in(hit - 1.35, hit - 0.45)   # ← 上界是 hit-0.45！
 ```
 
@@ -758,7 +762,7 @@ const p = SPR(time, hit - 0.46, hit);
 **批量检查命令：**
 
 ```bash
-# 所有 hit-N 偏移都该 >= 0.44
+＃ 所有 hit-N 偏移都该 >= 0.44
 grep -o 'hit - 0\.[0-9]*' canvas/scenes.js | sort -u
 ```
 

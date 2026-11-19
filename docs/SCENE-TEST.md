@@ -6,30 +6,30 @@
 
 ```bash
 mkdir _scenetest && cd _scenetest
-# 把 docs/scene-test/ 里的 script.md 和 scene-def.json 复制进来
+＃ 把 docs/scene-test/ 里的 script.md 和 scene-def.json 复制进来
 cp ../docs/scene-test/* .
 
-# 配音
+＃ 配音
 python ../tools/gen_voice.py . --backend edge-tts
 
-# 对齐
+＃ 对齐
 python ../tools/align.py .
 
-# 闸门 1
+＃ 闸门 1
 python ../tools/gate1.py .
 
-# 复制画布运行时
+＃ 复制画布运行时
 cp ../canvas/* .
 
-# 渲染（127 秒 = 7622 帧，约 13 分钟）
+＃ 渲染（127 秒 = 7622 帧，约 13 分钟）
 node render.cjs . 9:16
 
-# 合成
+＃ 合成
 ffmpeg -y -framerate 60 -i frames/f%05d.png -i narration.wav \
   -c:v libx264 -preset fast -crf 22 -pix_fmt yuv420p \
   -c:a aac -b:a 160k -shortest FINAL.mp4
 
-# 卡字率
+＃ 卡字率
 python ../tools/kazi_check.py FINAL.mp4 --timeline timeline.json
 ```
 

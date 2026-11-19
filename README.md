@@ -79,7 +79,7 @@ At keyword time T:
   · The visual action must complete at T − 50 ms  (not T)
   · New elements appear no later than T − 200 ms
   · The 1.35 s before T must be "quiet" — only 0.1 % more motion than
-    the preceding second is enough, but it must not be moving constantly
+the preceding second is enough, but it must not be moving constantly
 ```
 
 Based on ITU-R BT.1359: **audio leading video by 45 ms is perceptible;
@@ -179,32 +179,32 @@ signal to satisfy the detector.
 ## Making your own video
 
 ```bash
-# 1. One video, one directory
+＃ 1. One video, one directory
 mkdir my-video && cd my-video
 
-# 2. Write the script (format in 工作流 §2.13)
-#    [01 opening]
-#    First a word: *kayzi*, the frame the picture moves. | 0.5
+＃ 2. Write the script (format in 工作流 §2.13)
+＃    [01 opening]
+＃    First a word: *kayzi*, the frame the picture moves. | 0.5
 
-# 3. Script health check
+＃ 3. Script health check
 python ../tools/lint_script.py script.md
 
-# 4. Voice
+＃ 4. Voice
 python ../tools/gen_voice.py . --backend edge-tts
 
-# 5. Align
+＃ 5. Align
 python ../tools/align.py .
 
-# 6. ⚠️ Gate 1: timeline sign-off (the most important gate)
+＃ 6. ⚠️ Gate 1: timeline sign-off (the most important gate)
 python ../tools/gate1.py .
 
-# 7. Visuals (write scene-def.json, then render)
+＃ 7. Visuals (write scene-def.json, then render)
 python ../canvas/render.cjs . 9:16
 
-# 8. Mix
+＃ 8. Mix
 python ../tools/mix.py . --bgm bgm.wav
 
-# 9. Check
+＃ 9. Check
 python ../tools/kazi_check.py FINAL.mp4 --timeline timeline.json
 ```
 
@@ -217,20 +217,20 @@ python ../tools/kazi_check.py FINAL.mp4 --timeline timeline.json
 
 ```
 write → voice → align
-                  ↓
-          [Gate 1] timeline sign-off
-                  ↓
-        draw → [Gate 2] render 3 short segments
-                  ↓
-            full render
-                  ↓
-          [Gate 3] sample frames and inspect
-                  ↓
-            fix visuals
-                  ↓
-          [Gate 4] ★ re-measure kayzi rate
-                  ↓
-        re-render only the changed segments
+  ↓
+  [Gate 1] timeline sign-off
+  ↓
+draw → [Gate 2] render 3 short segments
+  ↓
+full render
+  ↓
+  [Gate 3] sample frames and inspect
+  ↓
+fix visuals
+  ↓
+  [Gate 4] ★ re-measure kayzi rate
+  ↓
+re-render only the changed segments
 ```
 
 **Gate 4 is the easiest to skip and the most expensive.** Changing visuals

@@ -35,13 +35,13 @@
 ## 3 分钟跑起来
 
 ```bash
-# 1. 克隆
+＃ 1. 克隆
 git clone <repo> && cd <repo>
 
-# 2. 装依赖（自动检测你的硬件，推荐合适的 TTS 方案）
+＃ 2. 装依赖（自动检测你的硬件，推荐合适的 TTS 方案）
 python setup.py
 
-# 3. 做个示例视频
+＃ 3. 做个示例视频
 python make_demo.py
 ```
 
@@ -172,32 +172,32 @@ python make_demo.py
 ## 一条片子怎么走
 
 ```bash
-# 1. 建项目目录（一条片子一个目录）
+＃ 1. 建项目目录（一条片子一个目录）
 mkdir my-video && cd my-video
 
-# 2. 写稿（格式见 工作流 2.13）
-#    [01 开场]
-#    先说个词，叫卡字，就是画面动的那一下，正好跟字对上。 | 0.5
+＃ 2. 写稿（格式见 工作流 2.13）
+＃    [01 开场]
+＃    先说个词，叫卡字，就是画面动的那一下，正好跟字对上。 | 0.5
 
-# 3. 稿子体检
+＃ 3. 稿子体检
 python ../tools/lint_script.py script.md
 
-# 4. 配音
+＃ 4. 配音
 python ../tools/gen_voice.py . --backend edge-tts
 
-# 5. 对齐
+＃ 5. 对齐
 python ../tools/align.py .
 
-# 6. ⚠️ 闸门 1：时间表定稿（最关键的一关）
+＃ 6. ⚠️ 闸门 1：时间表定稿（最关键的一关）
 python ../tools/gate1.py .
 
-# 7. 画面（写 scene-def.json，然后渲染）
+＃ 7. 画面（写 scene-def.json，然后渲染）
 python ../tools/render.py . 9:16
 
-# 8. 混音
+＃ 8. 混音
 python ../tools/mix.py . --bgm bgm.wav
 
-# 9. 检查
+＃ 9. 检查
 python ../tools/kazi_check.py FINAL.mp4 --timeline timeline.json
 ```
 
@@ -209,20 +209,20 @@ python ../tools/kazi_check.py FINAL.mp4 --timeline timeline.json
 
 ```
 写稿 → 配音 → 对时间
-              ↓
-      【闸门 1】时间表定稿
-              ↓
-      画画面 → 【闸门 2】局部渲 3 处
-              ↓
-            全片渲染
-              ↓
-      【闸门 3】抽帧看画面
-              ↓
-            修画面
-              ↓
-      【闸门 4】★ 再测卡字率
-              ↓
-      只重渲改动的段
+  ↓
+  【闸门 1】时间表定稿
+  ↓
+  画画面 → 【闸门 2】局部渲 3 处
+  ↓
+全片渲染
+  ↓
+  【闸门 3】抽帧看画面
+  ↓
+修画面
+  ↓
+  【闸门 4】★ 再测卡字率
+  ↓
+  只重渲改动的段
 ```
 
 **闸门 4 最容易漏：改画面会改变帧间差异，卡字率会掉。** 实测 100% → 30%。
