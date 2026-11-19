@@ -1,0 +1,9 @@
+# 开发期依赖 —— 运行时不 import
+# 用于：字体子集生成、缺字检测、单元测试
+
+# 字体子集（tools/font_check.py 的 cmap 解析 + 字体重建）
+fonttools>=4.60
+brotli>=1.1
+
+# 单元测试
+pytest>=8.0

@@ -164,8 +164,19 @@ def main():
         print("\n  ⚠ 闸门 1 没过 —— 示例稿是按规则写的，不应该发生")
         print("    如果这是你自己的稿子，回去改，别往下走")
 
-    # ── 5. 渲染 ──
-    hr("5. 渲染画面")
+    # ── 5. 缺字检测（P0-1）──
+    hr("5. 缺字检测")
+    font_ok, fout = run([sys.executable, str(ROOT/"tools/font_check.py"), str(DEMO)],
+                        label="font_check.py")
+    if not font_ok:
+        print("\n  ✗ 稿子里有字体子集没有的字，会在渲染时回退到系统字体")
+        print("    换字，或扩展 canvas/fonts/ 的子集后重跑")
+        print("    不要让缺字进渲染 —— 它不报错，只在成片里露出来")
+        return 1
+    print("  ✓ 全部字符都有字形")
+
+    # ── 6. 渲染 ──
+    hr("6. 渲染画面")
     tl = json.loads((DEMO / "timeline.json").read_text(encoding="utf-8"))
     total = tl.get("total", 15)
     print(f"  总长 {total:.2f}s  比例 {a.ratio}")
@@ -190,8 +201,8 @@ def main():
         print(out[-800:])
         return 1
 
-    # ── 6. 混音 ──
-    hr("6. 混音")
+    # ── 7. 混音 ──
+    hr("7. 混音")
     # ⚠️ 归一化的源永远是 mix.wav / narration.wav，不能是 mix-final.wav
     #    否则重跑会叠加增益，越跑越小声（实测 -18.3 → -23.3）
     bgm = P.bgm
@@ -266,8 +277,8 @@ def main():
     ok = -15.5 <= fi <= -12.5 and ftp <= -1.0
     print(f"  最终    {fi:.1f} LUFS / {ftp:.1f} dBTP  {'✓ 达标' if ok else '⚠ 偏差'}")
 
-    # ── 7. 合成 ──
-    hr("7. 合成视频")
+    # ── 8. 合成 ──
+    hr("8. 合成视频")
     out_mp4 = DEMO / "FINAL.mp4"
     r = subprocess.run([ffm, "-y", "-v", "error",
                         "-framerate", "60", "-i", str(DEMO/"frames"/"f%05d.png"),
@@ -283,14 +294,14 @@ def main():
         print(f"  ✗ 失败：{r.stderr[:300]}")
         return 1
 
-    # ── 8. 卡字率 ──
-    hr("8. 卡字率检查")
+    # ── 9. 卡字率 ──
+    hr("9. 卡字率检查")
     ok, out = run([sys.executable, str(ROOT/"tools/kazi_check.py"),
                    str(out_mp4), "--timeline", str(DEMO/"timeline.json")],
                   timeout=900, label="kazi_check.py")
     (DEMO / "check.txt").write_text(out, encoding="utf-8")
 
-    # ── 9. 清理 ──
+    # ── 10. 清理 ──
     if not a.keep:
         shutil.rmtree(DEMO / "frames", ignore_errors=True)
         shutil.rmtree(DEMO / "batch", ignore_errors=True)

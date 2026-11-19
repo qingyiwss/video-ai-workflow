@@ -289,6 +289,17 @@ def main():
     if not a.no_prep:
         prep()
         print("✓ 准备完成")
+        # 缺字检测：挂在 prep 之后，渲染之前
+        r = run([sys.executable, str(ROOT/"tools/font_check.py"), str(WORK)])
+        fo = (r.stdout or "") + (r.stderr or "")
+        if r.returncode != 0:
+            print("  ✗ 缺字：")
+            for line in fo.splitlines():
+                if line.strip().startswith("  ") or "缺" in line:
+                    print(f"    {line.strip()}")
+            print("  停下来，不要进渲染")
+            return
+        print("  ✓ 无缺字")
 
     if not a.sync:
         print(f"\n=== 四画幅静帧 @ {a.still}s ===")
