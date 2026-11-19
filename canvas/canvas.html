@@ -31,7 +31,11 @@ html,body{margin:0;padding:0;overflow:hidden;
   mix-blend-mode:multiply;pointer-events:none;z-index:2}
 #vign{position:absolute;inset:0;pointer-events:none;z-index:3;
   background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(26,28,31,.07) 100%)}
-#themeWash{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0}
+#themeWash{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;
+  will-change:transform,opacity}
+/* 转场墨线：1px，领先于新页推进 */
+#wipeLine{position:absolute;inset:0;pointer-events:none;z-index:3;display:none}
+#wipeLine .bar{position:absolute;top:0;bottom:0;width:1px;background:currentColor;opacity:.55}
 
 #chap{position:absolute;z-index:6}
 #chap .num{font-weight:700;color:currentColor;letter-spacing:-.02em;line-height:1;opacity:.55}
@@ -76,6 +80,7 @@ html,body{margin:0;padding:0;overflow:hidden;
   <canvas id="grain" width="270" height="480"></canvas>
   <div id="vign"></div>
   <div id="themeWash"></div>
+  <div id="wipeLine"><div class="bar" id="wipeBar"></div></div>
   <div id="hr"></div>
   <div id="chap"><div class="num" id="chapNum">01</div>
     <div class="cn" id="chapCn"></div><div class="en" id="chapEn"></div></div>
@@ -303,18 +308,50 @@ window.renderFrame = function (t) {
     st.classList.toggle('dark', DARK(cur.theme));
     st.classList.toggle('red', cur.theme === 'red');
   } else {
-    const k = IV(cur.inFrom, cur.inFrom + 0.55, t);
-    wash.style.opacity = 1;
+    // ═══════════════════════════════════════════════════════
+    // 主题切换转场：两种，只留这两种
+    //   ① 纸质 wipe —— 1px 墨线领先，新页从右侧推入
+    //   ② 整页上移 —— 旧页上移 8%，新页从下方 8% 进入
+    //
+    // 已删除：radial-gradient 径向扩散（观感接近 PPT 自带转场）
+    // 禁止：叠化、缩放推拉、任何超过 0.35s 的转场
+    // ═══════════════════════════════════════════════════════
+    const DUR = 0.28;                    // 固定 0.28s，不长于 0.35s
+    const t0 = cur.inFrom;
+    const k = CL(IV(t0, t0 + DUR, t));   // 0 → 1
     const col = cur.theme === 'red' ? '#A8231A' : DARK(cur.theme) ? '#1F3B4D' : '#F2EFE6';
-    wash.style.background =
-      `radial-gradient(circle at 50% 46%, ${col} 0%, ${col} ${k*150}%, transparent ${k*150+10}%)`;
-    if (k >= 1) {
-      st.classList.toggle('dark', DARK(cur.theme));
-      st.classList.toggle('red', cur.theme === 'red');
-      wash.style.opacity = 1 - IV(cur.inFrom + .55, cur.inFrom + .85, t);
-    } else {
+
+    // 两种转场交替使用：字数多的段用上移，字数少的用 wipe
+    const useWipe = (cur.sid.charCodeAt(0) % 2) === 0;
+    const line = el('wipeLine'), bar = el('wipeBar');
+
+    if (k < 1) {
+      // 转场中：旧主题保持，新颜色层推进
       st.classList.toggle('dark', DARK(prev.theme));
       st.classList.toggle('red', prev.theme === 'red');
+      wash.style.opacity = 1;
+      wash.style.background = col;
+
+      if (useWipe) {
+        // 纸质 wipe：色层从右侧推入，左边缘是一条 1px 墨线
+        const e = E.standard ? E.standard(k) : k;
+        wash.style.transform = `translateX(${(1 - e) * 100}%)`;
+        line.style.display = 'block';
+        bar.style.left = `${(1 - e) * 100}%`;
+        bar.style.background = DARK(cur.theme) ? '#F2EFE6' : '#1A1C1F';
+      } else {
+        // 整页上移：色层从下方 8% 升起
+        const e = k * k * (3 - 2 * k);   // smoothstep
+        wash.style.transform = `translateY(${(1 - e) * 8}%)`;
+        line.style.display = 'none';
+      }
+    } else {
+      // 转场结束：切换主题，撤掉色层
+      st.classList.toggle('dark', DARK(cur.theme));
+      st.classList.toggle('red', cur.theme === 'red');
+      wash.style.opacity = 0;
+      wash.style.transform = 'none';
+      line.style.display = 'none';
     }
   }
 
