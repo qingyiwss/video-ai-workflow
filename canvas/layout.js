@@ -51,8 +51,8 @@ const FONT_BASE = {
 
 // ── 间距基准（竖屏 1080×1920）──
 const SPACE_BASE = {
-  outer:  [ 64, 'd'],   // 外边距
-  gap:    [ 24, 'd'],   // 元素间距
+  outer:  [ 72, 'd'],   // 外边距（2026-11：64 → 72，页边距更宽，呼吸更足）
+  gap:    [ 24, 'd'],   // 元素间距（保留，作为 sm/md/lg 之外的默认值）
   // 字幕距底：竖屏要避开手机底部手势区，横屏不需要那么多
   capBot: [190, 'h'],   // 字幕距底（按高度算，横屏自然变小）
 };
@@ -199,6 +199,33 @@ function make(ratioKey) {
 
   /** 4px 精细网格（容器位置、装饰线用） */
   const snap4 = (v) => Math.round(v / 4) * 4;
+
+  /**
+   * 三档间距 —— 全部是 baseline('body') 的整数倍
+   *
+   *   sm = 1 × baseline   同一信息组内（标题与其注释）
+   *   md = 2 × baseline   组与组之间
+   *   lg = 3 × baseline   主体块与页脚/页眉之间
+   *
+   * 为什么用基线倍数而不是固定 px：
+   *   字号随画幅变（9:16 的 body 是 64px，1:1 是 48px），
+   *   固定 px 的间距在小画幅上会显得过大，在横屏上会显得过小。
+   *   用基线的整数倍，间距与字号同比例缩放。
+   *
+   * ⚠️ 硬规则：同一屏内相邻间距不得出现相等值（同一信息组内部除外）。
+   *    这条由 _verify.py 断言，改回去会报错。
+   */
+  // 间距单位不是「行高」而是「字号的 0.4 倍」：
+  //   body 字号 64px → 单位 26px（接近原来的 gap 24）
+  //   用行高（108px）做单位会让 sm 就达到 108px，两个标题隔开会像两个段落
+  const spacingUnit = () => Math.round(font('body') * 0.40);
+  const space = (n) => spacingUnit() * n;
+  const SP = {
+    sm: space(1),      // ≈ 26px @9:16   组内
+    md: space(2),      // ≈ 52px         组间
+    lg: space(3),      // ≈ 78px         块间
+    get u() { return spacingUnit(); },
+  };
 
   /**
    * 网格 API —— 所有场景排版应该走这里，不要手写 px
@@ -410,7 +437,8 @@ function make(ratioKey) {
     ratio: ratioKey, name: R.name,
     W, H, isLandscape,
     font, pad, px, area, rows, cols, contentW, slots, heroSplit, fitFont,
-    measureText, FONT_STACK, FONT_SERIF, FONT_SANS, stackFor, G, baseline, snapY, snap4, contentX,
+    measureText, FONT_STACK, FONT_SERIF, FONT_SANS, stackFor, G, baseline, snapY, snap4,
+    contentX, space, SP,
     // 便捷：返回 CSS 字符串
     css: {
       font: (key, weight = 700) => `font:${weight} ${font(key)}px/1.2 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif`,

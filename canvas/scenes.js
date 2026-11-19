@@ -154,7 +154,7 @@ BUILDER.hero = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
   // ═══ 纵向：整块在 [区顶, 字幕顶] 之间垂直居中 ═══
   // 之前固定 22% 起点，导致下方空 60%。改为算完总高再居中。
   const RULE_H = Math.max(2, Math.round(L.H / 640));
-  const GAP = L.pad('gap');
+  const GAP = L.SP.md;
   const kickerH = kicker ? Math.round(L.font('h2') * 1.4) : 0;
   const titleH = Math.round(heroSize * 1.08);
   const noteH = note ? Math.round(L.font('body') * 1.7 * 2) : 0;   // 预留 2 行
@@ -229,7 +229,7 @@ BUILDER.points = ({ sc, L, data, hit, fg, sub, fs }) => {
     const r = sl[i];
     // ⭐ 左对齐：气泡和文字都从容器左边缘开始（align-items:flex-start）
     //    竖屏时把整块推到栏线，横屏时每栏各占一段
-    const gapY = Math.round(L.pad('gap') * 0.55);
+    const gapY = L.SP.sm;
     return `<div class="pt" data-i="${i}" style="position:absolute;
       left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
@@ -237,7 +237,7 @@ BUILDER.points = ({ sc, L, data, hit, fg, sub, fs }) => {
       <div style="width:${Math.round(L.font('h1')*0.92)}px;height:${Math.round(L.font('h1')*0.92)}px;
         border-radius:50%;background:transparent;border:2px solid ${fg};color:${fg};display:flex;
         align-items:center;justify-content:center;${fs('h2',700)};flex:none;
-        margin-bottom:${Math.round(L.pad('gap')*0.30)}px">${i+1}</div>
+        margin-bottom:${Math.round(L.SP.sm*0.55)}px">${i+1}</div>
       <div style="width:100%;color:${fg};font-family:${FF_SERIF};font-size:${Math.round(L.font('h2')*1.05)}px;font-weight:600;line-height:1.35;text-align:left">${it.title || it}</div>
       ${it.desc ? `<div style="width:100%;color:${sub};${fs('label',500,1.5)};text-align:left">${it.desc}</div>` : ''}
     </div>`;
@@ -266,7 +266,7 @@ BUILDER.steps = ({ sc, L, data, hit, fg, sub, fs }) => {
   const land = L.isLandscape;
   const O = L.pad('outer');
   const top = L.px(22, 'h'), bot = L.px(76, 'h');
-  const gap = L.pad('gap');
+  const gap = L.SP.md;
   // 横屏横向排，竖屏纵向排
   const each = land
     ? (L.W - O*2 - gap*(n-1)) / n
@@ -311,7 +311,7 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
   // 标题占了上面，色块要往下让
   const top = L.px(title ? 26 : 18, 'h'), bot = L.px(78, 'h');
   const land = L.isLandscape;
-  const gap = L.pad('gap') * 1.2;
+  const gap = L.SP.lg;
 
   let lx, ly, lw, lh, rx, ry, rw, rh;
   if (land) {
@@ -332,7 +332,7 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
     <div id="cmpL" style="position:absolute;left:${lx}px;top:${ly}px;width:${lw}px;height:${lh}px;
       border-radius:${Math.round(L.font('body')*0.28)}px;background:${left.color||C.soft};
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-      gap:${Math.round(L.pad('gap')*0.5)}px;opacity:.30;box-sizing:border-box;padding:0 6%;overflow:hidden">
+      gap:${L.SP.sm}px;opacity:.30;box-sizing:border-box;padding:0 6%;overflow:hidden">
       <div class="ht"></div>
       <div style="color:#fff;${fs('h2',700,1.25)};text-align:left;font-family:${FF_SERIF};font-weight:600">${left.title||''}</div>
       ${left.desc ? `<div style="color:rgba(255,255,255,.8);${fs('label',500,1.4)};text-align:left">${left.desc}</div>` : ''}
@@ -340,7 +340,7 @@ BUILDER.compare = ({ sc, L, data, hit, fg, sub, fs, theme }) => {
     <div id="cmpR" style="position:absolute;left:${rx}px;top:${ry}px;width:${rw}px;height:${rh}px;
       border-radius:${Math.round(L.font('body')*0.28)}px;background:${right.color||C.warm};
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-      gap:${Math.round(L.pad('gap')*0.5)}px;opacity:.30;box-sizing:border-box;padding:0 6%;overflow:hidden">
+      gap:${L.SP.sm}px;opacity:.30;box-sizing:border-box;padding:0 6%;overflow:hidden">
       <div class="ht"></div>
       <div style="color:#fff;${fs('h2',700,1.25)};text-align:left;font-family:${FF_SERIF};font-weight:600">${right.title||''}</div>
       ${right.desc ? `<div style="color:rgba(255,255,255,.85);${fs('label',500,1.4)};text-align:left">${right.desc}</div>` : ''}
@@ -511,7 +511,7 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
   const O = L.pad('outer');
   const land = L.isLandscape;
   const top = L.px(20, 'h'), bot = L.px(78, 'h');
-  const gap = L.pad('gap');
+  const gap = L.SP.md;
 
   let x1,y1,w1,h1,x2,y2,w2,h2;
   if (land) {
@@ -527,7 +527,7 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
   sc.innerHTML = `
     <div style="position:absolute;left:${x1}px;top:${y1}px;width:${w1}px;height:${h1}px;
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-      gap:${Math.round(L.pad('gap')*0.55)}px;box-sizing:border-box;padding:0 ${Math.round(O*0.55)}px">
+      gap:${L.SP.sm}px;box-sizing:border-box;padding:0 ${Math.round(O*0.55)}px">
       <div style="color:${sub};${fs('label',600,1.2)};letter-spacing:.12em">${label1}</div>
       <div id="ba1" style="color:${sub};
         font:600 ${before.size || L.font('h1')}px/1.20 ${FF_SERIF};
@@ -536,7 +536,7 @@ BUILDER['before-after'] = ({ sc, L, data, hit, fg, sub, fs }) => {
     </div>
     <div style="position:absolute;left:${x2}px;top:${y2}px;width:${w2}px;height:${h2}px;
       display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-      gap:${Math.round(L.pad('gap')*0.55)}px;box-sizing:border-box;padding:0 ${Math.round(O*0.55)}px">
+      gap:${L.SP.sm}px;box-sizing:border-box;padding:0 ${Math.round(O*0.55)}px">
       <div style="color:${C.warm};${fs('label',600,1.2)};letter-spacing:.12em">${label2}</div>
       <div id="ba2" style="color:${fg};
         font:600 ${after.size || L.font('h1')}px/1.20 ${FF_SERIF};
@@ -564,14 +564,14 @@ BUILDER.list = ({ sc, L, data, hit, fg, sub, fs }) => {
   const n = items.length;
   const O = L.pad('outer');
   const top = L.px(17, 'h'), bot = L.px(79, 'h');
-  const gap = L.pad('gap') * 0.7;
+  const gap = L.SP.sm;
   const each = (bot - top - gap*(n-1)) / n;
 
   sc.innerHTML = items.map((it, i) => {
     const y = Math.round(top + i*(each+gap));
     return `<div class="li" data-i="${i}" style="position:absolute;
       left:${O}px;top:${y}px;width:${L.W-O*2}px;height:${Math.round(each)}px;
-      display:flex;align-items:center;gap:${L.pad('gap')}px;opacity:0">
+      display:flex;align-items:center;gap:${L.SP.md}px;opacity:0">
       <div style="width:${Math.round(L.font('label')*1.1)}px;height:${Math.round(L.font('label')*1.1)}px;
         border-radius:50%;border:3px solid ${C.sage};display:flex;align-items:center;
         justify-content:center;color:${C.sage};${fs('label',700)};flex:none">✓</div>
@@ -607,7 +607,7 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
   sc.innerHTML = `
     <div style="position:absolute;left:${hs.main.x}px;top:${hs.main.y}px;
       width:${hs.main.w}px;height:${hs.main.h}px;
-      display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:${L.pad('gap')}px">
+      display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:${L.SP.md}px">
       <div id="pn" style="color:${fg};font:600 ${nameSize}px/1.10 ${FF_SERIF};letter-spacing:-.01em;text-align:left;
         opacity:0">${name}</div>
       <div id="pline" style="width:0;height:${Math.max(3, Math.round(L.H/640))}px;
@@ -617,7 +617,7 @@ BUILDER.product = ({ sc, L, data, hit, fg, sub, fs }) => {
     </div>
     <div style="position:absolute;left:${hs.side.x}px;top:${hs.side.y}px;
       width:${hs.side.w}px;height:${hs.side.h}px;
-      display:flex;flex-direction:column;justify-content:center;gap:${L.pad('gap')}px">
+      display:flex;flex-direction:column;justify-content:center;gap:${L.SP.md}px">
       ${features.map((f,i)=>`<div class="pf" data-i="${i}" style="color:${sub};
         ${fs('body',500,1.4)};opacity:0">· ${f}</div>`).join('')}
     </div>`;
@@ -653,10 +653,10 @@ BUILDER.cta = ({ sc, L, data, hit, t0, fg, sub, fs }) => {
       <div id="cm" style="color:${fg};font:600 ${mainSize}px/1.30 ${FF_SERIF};letter-spacing:-.01em;opacity:0">${main}</div>
       <div id="cline" style="display:inline-block;width:0;
         height:${Math.max(3, Math.round(L.H/640))}px;background:${fg};opacity:0;
-        margin-top:${Math.round(L.pad('gap')*0.6)}px"></div>
-      ${subline ? `<div id="cs" style="margin-top:${L.pad('gap')}px;color:${sub};
+        margin-top:${L.SP.sm}px"></div>
+      ${subline ? `<div id="cs" style="margin-top:${L.SP.md}px;color:${sub};
         ${fs('h2',500,1.4)};opacity:0">${subline}</div>` : ''}
-      ${action ? `<div id="ca" style="margin-top:${Math.round(L.pad('gap')*1.4)}px;
+      ${action ? `<div id="ca" style="margin-top:${L.SP.lg}px;
         display:inline-block;padding:${Math.round(L.font('body')*0.5)}px ${Math.round(L.font('body')*1.2)}px;
         border-radius:${Math.round(L.font('body')*0.6)}px;background:${C.warm};color:#fff;position:relative;overflow:hidden;
         ${fs('h2',700,1.2)};opacity:0">${action}</div>` : ''}
